@@ -1,6 +1,7 @@
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local Lighting = game:GetService("Lighting")
+local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
@@ -48,6 +49,117 @@ loadingLabel.Parent = loadingFrame
 
 local mainFrame = createRoundedFrame(screenGui, UDim2.new(0, 500, 0, 350), UDim2.new(0.5, 0, 0.5, 0), Color3.fromRGB(30,30,30))
 mainFrame.Visible = false
+mainFrame.ZIndex = 2
+
+-- Botão X no canto superior direito para fechar GUI (presente em PC e mobile)
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0, 30, 0, 30)
+closeButton.Position = UDim2.new(1, -35, 0, 5)
+closeButton.AnchorPoint = Vector2.new(0, 0)
+closeButton.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+closeButton.Text = "X"
+closeButton.TextColor3 = Color3.fromRGB(255,255,255)
+closeButton.Font = Enum.Font.GothamBold
+closeButton.TextSize = 20
+closeButton.Parent = mainFrame
+
+local closeUICorner = Instance.new("UICorner")
+closeUICorner.CornerRadius = UDim.new(0, 8)
+closeUICorner.Parent = closeButton
+
+closeButton.MouseEnter:Connect(function()
+    TweenService:Create(closeButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(220, 70, 70)}):Play()
+end)
+closeButton.MouseLeave:Connect(function()
+    TweenService:Create(closeButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(180, 50, 50)}):Play()
+end)
+
+-- Botão flutuante para mobile (inicialmente invisível)
+local mobileToggleButton = Instance.new("TextButton")
+mobileToggleButton.Size = UDim2.new(0, 50, 0, 50)
+mobileToggleButton.Position = UDim2.new(0, 10, 1, -70) -- canto inferior esquerdo
+mobileToggleButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+mobileToggleButton.Text = "≡"
+mobileToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+mobileToggleButton.Font = Enum.Font.GothamBold
+mobileToggleButton.TextSize = 30
+mobileToggleButton.Visible = false
+mobileToggleButton.ZIndex = 3
+mobileToggleButton.Parent = screenGui
+
+local mobileUICorner = Instance.new("UICorner")
+mobileUICorner.CornerRadius = UDim.new(1, 0)
+mobileUICorner.Parent = mobileToggleButton
+
+mobileToggleButton.MouseEnter:Connect(function()
+    TweenService:Create(mobileToggleButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(70, 70, 70)}):Play()
+end)
+mobileToggleButton.MouseLeave:Connect(function()
+    TweenService:Create(mobileToggleButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(50, 50, 50)}):Play()
+end)
+
+-- Detectar plataforma (mobile se TouchEnabled true e KeyboardEnabled false)
+local isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
+
+if isMobile then
+    print("[Script] Plataforma detectada: Mobile")
+    mainFrame.Visible = true
+    mobileToggleButton.Visible = false
+else
+    print("[Script] Plataforma detectada: PC")
+    mainFrame.Visible = true
+    mobileToggleButton.Visible = false
+end
+
+local guiVisible = true
+
+local function showGUI()
+    mainFrame.Visible = true
+    if isMobile then
+        mobileToggleButton.Visible = false
+    end
+    guiVisible = true
+end
+
+local function hideGUI()
+    mainFrame.Visible = false
+    if isMobile then
+        mobileToggleButton.Visible = true
+    end
+    guiVisible = false
+end
+
+-- Fechar botão X
+closeButton.MouseButton1Click:Connect(function()
+    screenGui:Destroy()
+    print("[Script] GUI encerrada pelo usuário.")
+end)
+
+-- No PC, tecla RightControl alterna visibilidade da GUI
+if not isMobile then
+    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if not gameProcessed then
+            if input.KeyCode == Enum.KeyCode.RightControl then
+                if guiVisible then
+                    hideGUI()
+                else
+                    showGUI()
+                end
+            end
+        end
+    end)
+end
+
+-- No Mobile, o botão flutuante mostra/oculta a GUI
+mobileToggleButton.MouseButton1Click:Connect(function()
+    if guiVisible then
+        hideGUI()
+    else
+        showGUI()
+    end
+end)
+
+-- *** Aqui continua o script antigo de tabs e conteúdo ***
 
 local tabButtonsFrame = Instance.new("Frame")
 tabButtonsFrame.Size = UDim2.new(1, 0, 0, 40)
@@ -302,42 +414,4 @@ uicornerTeleport.CornerRadius = UDim.new(0, 15)
 uicornerTeleport.Parent = teleportButton
 
 teleportButton.MouseEnter:Connect(function()
-    TweenService:Create(teleportButton, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(70, 70, 70)}):Play()
-end)
-teleportButton.MouseLeave:Connect(function()
-    TweenService:Create(teleportButton, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(50, 50, 50)}):Play()
-end)
-
-teleportButton.MouseButton1Click:Connect(function()
-    if selectedPlayer and selectedPlayer.Character and selectedPlayer.Character:FindFirstChild("HumanoidRootPart") then
-        local hrp = selectedPlayer.Character.HumanoidRootPart
-        local char = player.Character
-        if char and char:FindFirstChild("HumanoidRootPart") then
-            char.HumanoidRootPart.CFrame = hrp.CFrame + Vector3.new(0, 3, 0)
-            print("[Script] Teleportado para " .. selectedPlayer.Name)
-        else
-            print("[Script] Seu personagem não está pronto.")
-        end
-    else
-        print("[Script] Nenhum jogador válido selecionado.")
-    end
-end)
-
-Players.PlayerAdded:Connect(function()
-    refreshPlayerList()
-end)
-Players.PlayerRemoving:Connect(function()
-    refreshPlayerList()
-end)
-
-coroutine.wrap(function()
-    wait(2)
-    if loadingFrame and loadingFrame.Parent then
-        loadingFrame:Destroy()
-    end
-    if blur and blur.Parent then
-        blur:Destroy()
-    end
-    mainFrame.Visible = true
-    print("[Script] Loading removido e GUI mostrada.")
-end)()
+    TweenService:Create(teleportButton, TweenInfo
