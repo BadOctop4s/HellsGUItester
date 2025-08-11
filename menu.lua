@@ -2,11 +2,25 @@ local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local Lighting = game:GetService("Lighting")
 local UserInputService = game:GetService("UserInputService")
+
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
-print("[Script] Iniciando script GUI executor...")
+-- Criar blur (ou pegar existente)
+local blur = Lighting:FindFirstChildOfClass("BlurEffect")
+if not blur then
+    blur = Instance.new("BlurEffect")
+    blur.Size = 24
+    blur.Parent = Lighting
+end
 
+-- Criar ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "TestGUIExecutor"
+screenGui.Parent = playerGui
+screenGui.ResetOnSpawn = false
+
+-- Função para criar frames arredondados
 local function createRoundedFrame(parent, size, position, bgColor)
     local frame = Instance.new("Frame")
     frame.Size = size
@@ -23,93 +37,111 @@ local function createRoundedFrame(parent, size, position, bgColor)
     return frame
 end
 
-local blur = Lighting:FindFirstChildOfClass("BlurEffect")
-if not blur then
-    blur = Instance.new("BlurEffect")
-    blur.Size = 24
-    blur.Parent = Lighting
-    print("[Script] Blur criado")
-else
-    print("[Script] Blur existente encontrado")
-end
-
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "TestGUIExecutor"
-screenGui.Parent = playerGui
-
-local loadingFrame = createRoundedFrame(screenGui, UDim2.new(0, 300, 0, 150), UDim2.new(0.5, 0, 0.5, 0), Color3.fromRGB(35, 35, 35))
+-- Tela de loading
+local loadingFrame = createRoundedFrame(screenGui, UDim2.new(0, 300, 0, 150), UDim2.new(0.5,0,0.5,0), Color3.fromRGB(35,35,35))
 local loadingLabel = Instance.new("TextLabel")
 loadingLabel.Text = "Carregando..."
-loadingLabel.Size = UDim2.new(1, 0, 1, 0)
+loadingLabel.Size = UDim2.new(1,0,1,0)
 loadingLabel.BackgroundTransparency = 1
-loadingLabel.TextColor3 = Color3.fromRGB(255,255,255)
+loadingLabel.TextColor3 = Color3.new(1,1,1)
 loadingLabel.Font = Enum.Font.GothamBold
 loadingLabel.TextSize = 28
 loadingLabel.Parent = loadingFrame
 
-local mainFrame = createRoundedFrame(screenGui, UDim2.new(0, 500, 0, 350), UDim2.new(0.5, 0, 0.5, 0), Color3.fromRGB(30,30,30))
+-- GUI principal (invisível no começo)
+local mainFrame = createRoundedFrame(screenGui, UDim2.new(0, 500, 0, 350), UDim2.new(0.5,0,0.5,0), Color3.fromRGB(30,30,30))
 mainFrame.Visible = false
 mainFrame.ZIndex = 2
+mainFrame.Name = "MainFrame"
 
--- Botão X no canto superior direito para fechar GUI (presente em PC e mobile)
+-- Tornar mainFrame arrastável
+local dragging
+local dragInput
+local dragStart
+local startPos
+
+local function updatePosition(input)
+    local delta = input.Position - dragStart
+    mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
+                                  startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+end
+
+mainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = mainFrame.Position
+
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+mainFrame.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and input == dragInput then
+        updatePosition(input)
+    end
+end)
+
+-- Botão fechar (X) no canto superior direito
 local closeButton = Instance.new("TextButton")
-closeButton.Size = UDim2.new(0, 30, 0, 30)
-closeButton.Position = UDim2.new(1, -35, 0, 5)
-closeButton.AnchorPoint = Vector2.new(0, 0)
-closeButton.BackgroundColor3 = Color3.fromRGB(180, 50, 50)
+closeButton.Size = UDim2.new(0,30,0,30)
+closeButton.Position = UDim2.new(1,-35,0,5)
+closeButton.AnchorPoint = Vector2.new(0,0)
+closeButton.BackgroundColor3 = Color3.fromRGB(180,50,50)
 closeButton.Text = "X"
-closeButton.TextColor3 = Color3.fromRGB(255,255,255)
+closeButton.TextColor3 = Color3.new(1,1,1)
 closeButton.Font = Enum.Font.GothamBold
 closeButton.TextSize = 20
 closeButton.Parent = mainFrame
-
 local closeUICorner = Instance.new("UICorner")
-closeUICorner.CornerRadius = UDim.new(0, 8)
+closeUICorner.CornerRadius = UDim.new(0,8)
 closeUICorner.Parent = closeButton
 
 closeButton.MouseEnter:Connect(function()
-    TweenService:Create(closeButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(220, 70, 70)}):Play()
+    TweenService:Create(closeButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(220,70,70)}):Play()
 end)
 closeButton.MouseLeave:Connect(function()
-    TweenService:Create(closeButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(180, 50, 50)}):Play()
+    TweenService:Create(closeButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(180,50,50)}):Play()
 end)
 
--- Botão flutuante para mobile (inicialmente invisível)
+closeButton.MouseButton1Click:Connect(function()
+    screenGui:Destroy()
+end)
+
+-- Botão flutuante para mobile (minimizar / abrir GUI)
 local mobileToggleButton = Instance.new("TextButton")
 mobileToggleButton.Size = UDim2.new(0, 50, 0, 50)
 mobileToggleButton.Position = UDim2.new(0, 10, 1, -70) -- canto inferior esquerdo
-mobileToggleButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+mobileToggleButton.BackgroundColor3 = Color3.fromRGB(50,50,50)
 mobileToggleButton.Text = "≡"
-mobileToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+mobileToggleButton.TextColor3 = Color3.new(1,1,1)
 mobileToggleButton.Font = Enum.Font.GothamBold
 mobileToggleButton.TextSize = 30
 mobileToggleButton.Visible = false
 mobileToggleButton.ZIndex = 3
 mobileToggleButton.Parent = screenGui
-
 local mobileUICorner = Instance.new("UICorner")
-mobileUICorner.CornerRadius = UDim.new(1, 0)
+mobileUICorner.CornerRadius = UDim.new(1,0)
 mobileUICorner.Parent = mobileToggleButton
 
 mobileToggleButton.MouseEnter:Connect(function()
-    TweenService:Create(mobileToggleButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(70, 70, 70)}):Play()
+    TweenService:Create(mobileToggleButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(70,70,70)}):Play()
 end)
 mobileToggleButton.MouseLeave:Connect(function()
-    TweenService:Create(mobileToggleButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(50, 50, 50)}):Play()
+    TweenService:Create(mobileToggleButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(50,50,50)}):Play()
 end)
 
--- Detectar plataforma (mobile se TouchEnabled true e KeyboardEnabled false)
 local isMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
-
-if isMobile then
-    print("[Script] Plataforma detectada: Mobile")
-    mainFrame.Visible = true
-    mobileToggleButton.Visible = false
-else
-    print("[Script] Plataforma detectada: PC")
-    mainFrame.Visible = true
-    mobileToggleButton.Visible = false
-end
 
 local guiVisible = true
 
@@ -129,28 +161,31 @@ local function hideGUI()
     guiVisible = false
 end
 
--- Fechar botão X
-closeButton.MouseButton1Click:Connect(function()
-    screenGui:Destroy()
-    print("[Script] GUI encerrada pelo usuário.")
-end)
+-- Ativar botão flutuante mobile e esconder GUI no mobile no início
+if isMobile then
+    print("[Script] Plataforma: Mobile")
+    mainFrame.Visible = true
+    mobileToggleButton.Visible = false
+else
+    print("[Script] Plataforma: PC")
+    mainFrame.Visible = true
+    mobileToggleButton.Visible = false
+end
 
--- No PC, tecla RightControl alterna visibilidade da GUI
+-- No PC, botão direito Ctrl para esconder/mostrar GUI
 if not isMobile then
-    UserInputService.InputBegan:Connect(function(input, gameProcessed)
-        if not gameProcessed then
-            if input.KeyCode == Enum.KeyCode.RightControl then
-                if guiVisible then
-                    hideGUI()
-                else
-                    showGUI()
-                end
+    UserInputService.InputBegan:Connect(function(input, processed)
+        if not processed and input.KeyCode == Enum.KeyCode.RightControl then
+            if guiVisible then
+                hideGUI()
+            else
+                showGUI()
             end
         end
     end)
 end
 
--- No Mobile, o botão flutuante mostra/oculta a GUI
+-- No mobile, botão flutuante abre/fecha GUI
 mobileToggleButton.MouseButton1Click:Connect(function()
     if guiVisible then
         hideGUI()
@@ -159,10 +194,9 @@ mobileToggleButton.MouseButton1Click:Connect(function()
     end
 end)
 
--- *** Aqui continua o script antigo de tabs e conteúdo ***
-
+-- Criar abas
 local tabButtonsFrame = Instance.new("Frame")
-tabButtonsFrame.Size = UDim2.new(1, 0, 0, 40)
+tabButtonsFrame.Size = UDim2.new(1,0,0,40)
 tabButtonsFrame.BackgroundTransparency = 1
 tabButtonsFrame.Parent = mainFrame
 
@@ -174,7 +208,7 @@ local function createTabButton(name, posScale)
     btn.Size = UDim2.new(0, 120, 0, 30)
     btn.Position = UDim2.new(posScale, 0, 0, 5)
     btn.BackgroundColor3 = Color3.fromRGB(60,60,60)
-    btn.TextColor3 = Color3.fromRGB(255,255,255)
+    btn.TextColor3 = Color3.new(1,1,1)
     btn.Font = Enum.Font.GothamBold
     btn.TextSize = 18
     btn.AutoButtonColor = false
@@ -198,8 +232,8 @@ local mainTabBtn = createTabButton("Main", 0.05)
 local teleportTabBtn = createTabButton("Teleport", 0.35)
 
 local mainTabFrame = Instance.new("Frame")
-mainTabFrame.Size = UDim2.new(1, 0, 1, -40)
-mainTabFrame.Position = UDim2.new(0, 0, 0, 40)
+mainTabFrame.Size = UDim2.new(1,0,1,-40)
+mainTabFrame.Position = UDim2.new(0,0,0,40)
 mainTabFrame.BackgroundTransparency = 1
 mainTabFrame.Parent = mainFrame
 
@@ -224,12 +258,11 @@ switchTab("Main")
 mainTabBtn.MouseButton1Click:Connect(function()
     switchTab("Main")
 end)
-
 teleportTabBtn.MouseButton1Click:Connect(function()
     switchTab("Teleport")
 end)
 
--- Conteúdo Main
+-- Conteúdo aba Main
 
 local thumbType = Enum.ThumbnailType.HeadShot
 local thumbSize = Enum.ThumbnailSize.Size180x180
@@ -249,10 +282,10 @@ local userNameLabel = Instance.new("TextLabel")
 userNameLabel.Text = player.Name
 userNameLabel.Font = Enum.Font.GothamBold
 userNameLabel.TextSize = 24
-userNameLabel.TextColor3 = Color3.fromRGB(255,255,255)
+userNameLabel.TextColor3 = Color3.new(1,1,1)
 userNameLabel.BackgroundTransparency = 1
-userNameLabel.Size = UDim2.new(1, 0, 0, 30)
-userNameLabel.Position = UDim2.new(0, 0, 0, 220)
+userNameLabel.Size = UDim2.new(1,0,0,30)
+userNameLabel.Position = UDim2.new(0,0,0,220)
 userNameLabel.Parent = mainTabFrame
 userNameLabel.TextScaled = true
 userNameLabel.TextWrapped = true
@@ -263,8 +296,8 @@ creatorLabel.Font = Enum.Font.Gotham
 creatorLabel.TextSize = 18
 creatorLabel.TextColor3 = Color3.fromRGB(180,180,180)
 creatorLabel.BackgroundTransparency = 1
-creatorLabel.Size = UDim2.new(1, 0, 0, 25)
-creatorLabel.Position = UDim2.new(0, 0, 0, 260)
+creatorLabel.Size = UDim2.new(1,0,0,25)
+creatorLabel.Position = UDim2.new(0,0,0,260)
 creatorLabel.Parent = mainTabFrame
 creatorLabel.TextScaled = true
 creatorLabel.TextWrapped = true
@@ -274,7 +307,7 @@ supportButton.Size = UDim2.new(0, 120, 0, 40)
 supportButton.Position = UDim2.new(0.5, -60, 0, 300)
 supportButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
 supportButton.Text = "Apoiar"
-supportButton.TextColor3 = Color3.fromRGB(255,255,255)
+supportButton.TextColor3 = Color3.new(1,1,1)
 supportButton.Font = Enum.Font.GothamSemibold
 supportButton.TextSize = 20
 supportButton.AutoButtonColor = false
@@ -299,15 +332,15 @@ supportButton.MouseButton1Click:Connect(function()
     print("[Script] Link para apoiar copiado para área de transferência.")
 end)
 
--- Conteúdo Teleport atualizado
+-- Conteúdo aba Teleport
 
 local selectedPlayer = nil
 
 local dropdownButton = Instance.new("TextButton")
 dropdownButton.Size = UDim2.new(0, 200, 0, 40)
 dropdownButton.Position = UDim2.new(0.5, -100, 0, 20)
-dropdownButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-dropdownButton.TextColor3 = Color3.fromRGB(255,255,255)
+dropdownButton.BackgroundColor3 = Color3.fromRGB(50,50,50)
+dropdownButton.TextColor3 = Color3.new(1,1,1)
 dropdownButton.Font = Enum.Font.GothamSemibold
 dropdownButton.TextSize = 20
 dropdownButton.Text = "Selecione um jogador"
@@ -319,16 +352,16 @@ uicornerDrop.CornerRadius = UDim.new(0, 15)
 uicornerDrop.Parent = dropdownButton
 
 dropdownButton.MouseEnter:Connect(function()
-    TweenService:Create(dropdownButton, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(70, 70, 70)}):Play()
+    TweenService:Create(dropdownButton, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(70,70,70)}):Play()
 end)
 dropdownButton.MouseLeave:Connect(function()
-    TweenService:Create(dropdownButton, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(50, 50, 50)}):Play()
+    TweenService:Create(dropdownButton, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(50,50,50)}):Play()
 end)
 
 local dropdownList = Instance.new("Frame")
 dropdownList.Size = UDim2.new(0, 200, 0, 0)
 dropdownList.Position = UDim2.new(0.5, -100, 0, 60)
-dropdownList.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+dropdownList.BackgroundColor3 = Color3.fromRGB(40,40,40)
 dropdownList.ClipsDescendants = true
 dropdownList.Parent = teleportTabFrame
 
@@ -353,7 +386,7 @@ dropdownButton.MouseButton1Click:Connect(toggleDropdown)
 
 local UIListLayout = Instance.new("UIListLayout")
 UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-UIListLayout.Padding = UDim.new(0, 5)
+UIListLayout.Padding = UDim.new(0,5)
 UIListLayout.Parent = dropdownList
 
 local function refreshPlayerList()
@@ -367,8 +400,8 @@ local function refreshPlayerList()
         if plr ~= player then
             local btn = Instance.new("TextButton")
             btn.Size = UDim2.new(1, -10, 0, 30)
-            btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
-            btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            btn.BackgroundColor3 = Color3.fromRGB(60,60,60)
+            btn.TextColor3 = Color3.new(1,1,1)
             btn.Font = Enum.Font.Gotham
             btn.TextSize = 18
             btn.Text = plr.Name
@@ -401,8 +434,8 @@ refreshPlayerList()
 local teleportButton = Instance.new("TextButton")
 teleportButton.Size = UDim2.new(0, 200, 0, 40)
 teleportButton.Position = UDim2.new(0.5, -100, 0, 210)
-teleportButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-teleportButton.TextColor3 = Color3.fromRGB(255,255,255)
+teleportButton.BackgroundColor3 = Color3.fromRGB(50,50,50)
+teleportButton.TextColor3 = Color3.fromRGB(255, 255, 255) -- CORREÇÃO AQUI
 teleportButton.Font = Enum.Font.GothamSemibold
 teleportButton.TextSize = 20
 teleportButton.Text = "Teleportar"
@@ -414,4 +447,16 @@ uicornerTeleport.CornerRadius = UDim.new(0, 15)
 uicornerTeleport.Parent = teleportButton
 
 teleportButton.MouseEnter:Connect(function()
-    TweenService:Create(teleportButton, TweenInfo
+    TweenService:Create(teleportButton, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(70,70,70)}):Play()
+end)
+teleportButton.MouseLeave:Connect(function()
+    TweenService:Create(teleportButton, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(50,50,50)}):Play()
+end)
+
+teleportButton.MouseButton1Click:Connect(function()
+    if selectedPlayer and selectedPlayer.Character and selectedPlayer.Character:FindFirstChild("HumanoidRootPart") and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        player.Character.HumanoidRootPart.CFrame = selectedPlayer.Character.HumanoidRootPart.CFrame
+    else
+        warn("Jogador inválido ou personagem não carregado.")
+    end
+end)
