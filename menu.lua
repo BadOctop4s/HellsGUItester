@@ -1,8 +1,13 @@
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
+local Lighting = game:GetService("Lighting")
 local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
 
--- Criar uma borda arredondada
+-- Debug print
+print("[Script] Iniciando script GUI executor...")
+
+-- Função para criar borda arredondada
 local function createRoundedFrame(parent, size, position, bgColor)
     local frame = Instance.new("Frame")
     frame.Size = size
@@ -19,18 +24,23 @@ local function createRoundedFrame(parent, size, position, bgColor)
     return frame
 end
 
--- Blur e tela de loading
-local Lighting = game:GetService("Lighting")
-local blur = Instance.new("BlurEffect")
-blur.Size = 24
-blur.Parent = Lighting
+-- Pegar blur existente ou criar um novo
+local blur = Lighting:FindFirstChildOfClass("BlurEffect")
+if not blur then
+    blur = Instance.new("BlurEffect")
+    blur.Size = 24
+    blur.Parent = Lighting
+    print("[Script] Blur criado")
+else
+    print("[Script] Blur existente encontrado")
+end
 
-local playerGui = player:WaitForChild("PlayerGui")
-
+-- Criar ScreenGui
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "TestGUIExecutor"
 screenGui.Parent = playerGui
 
+-- Tela de loading
 local loadingFrame = createRoundedFrame(screenGui, UDim2.new(0, 300, 0, 150), UDim2.new(0.5, 0, 0.5, 0), Color3.fromRGB(35, 35, 35))
 local loadingLabel = Instance.new("TextLabel")
 loadingLabel.Text = "Carregando..."
@@ -40,32 +50,6 @@ loadingLabel.TextColor3 = Color3.fromRGB(255,255,255)
 loadingLabel.Font = Enum.Font.GothamBold
 loadingLabel.TextSize = 28
 loadingLabel.Parent = loadingFrame
-
--- Função para criar botão com hover
-local function createButton(parent, size, position, text)
-    local btn = Instance.new("TextButton")
-    btn.Size = size
-    btn.Position = position
-    btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    btn.Text = text
-    btn.TextColor3 = Color3.fromRGB(255,255,255)
-    btn.Font = Enum.Font.GothamSemibold
-    btn.TextSize = 20
-    btn.AutoButtonColor = false
-    btn.Parent = parent
-
-    local uicorner = Instance.new("UICorner")
-    uicorner.CornerRadius = UDim.new(0, 15)
-    uicorner.Parent = btn
-
-    btn.MouseEnter:Connect(function()
-        TweenService:Create(btn, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(70, 70, 70)}):Play()
-    end)
-    btn.MouseLeave:Connect(function()
-        TweenService:Create(btn, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(50, 50, 50)}):Play()
-    end)
-    return btn
-end
 
 -- Criar janela principal
 local mainFrame = createRoundedFrame(screenGui, UDim2.new(0, 500, 0, 350), UDim2.new(0.5, 0, 0.5, 0), Color3.fromRGB(30,30,30))
@@ -108,7 +92,6 @@ end
 local mainTabBtn = createTabButton("Main", 0.05)
 local teleportTabBtn = createTabButton("Teleport", 0.35)
 
--- Frames para abas
 local mainTabFrame = Instance.new("Frame")
 mainTabFrame.Size = UDim2.new(1, 0, 1, -40)
 mainTabFrame.Position = UDim2.new(0, 0, 0, 40)
@@ -141,7 +124,7 @@ teleportTabBtn.MouseButton1Click:Connect(function()
     switchTab("Teleport")
 end)
 
--- Conteúdo da aba Main
+-- Conteúdo Main --
 
 local thumbType = Enum.ThumbnailType.HeadShot
 local thumbSize = Enum.ThumbnailSize.Size180x180
@@ -181,25 +164,73 @@ creatorLabel.Parent = mainTabFrame
 creatorLabel.TextScaled = true
 creatorLabel.TextWrapped = true
 
-local supportButton = createButton(mainTabFrame, UDim2.new(0, 120, 0, 40), UDim2.new(0.5, -60, 0, 300), "Apoiar")
+local supportButton = Instance.new("TextButton")
+supportButton.Size = UDim2.new(0, 120, 0, 40)
+supportButton.Position = UDim2.new(0.5, -60, 0, 300)
+supportButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+supportButton.Text = "Apoiar"
+supportButton.TextColor3 = Color3.fromRGB(255,255,255)
+supportButton.Font = Enum.Font.GothamSemibold
+supportButton.TextSize = 20
+supportButton.AutoButtonColor = false
+supportButton.Parent = mainTabFrame
+
+local uicornerSupport = Instance.new("UICorner")
+uicornerSupport.CornerRadius = UDim.new(0, 15)
+uicornerSupport.Parent = supportButton
+
+supportButton.MouseEnter:Connect(function()
+    TweenService:Create(supportButton, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(70, 70, 70)}):Play()
+end)
+supportButton.MouseLeave:Connect(function()
+    TweenService:Create(supportButton, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(50, 50, 50)}):Play()
+end)
+
 supportButton.MouseButton1Click:Connect(function()
-    local url = "https://www.roblox.com/users/12345678/profile" -- seu link aqui
+    local url = "https://www.roblox.com/users/12345678/profile"
     if setclipboard then
         setclipboard(url)
     end
-    -- Alguns executores suportam abrir links direto, outros não
-    print("Link para apoiar copiado para a área de transferência.")
+    print("[Script] Link para apoiar copiado para área de transferência.")
 end)
 
--- Aba Teleport
+-- Conteúdo Teleport --
 
-local testButton = createButton(teleportTabFrame, UDim2.new(0, 150, 0, 50), UDim2.new(0.5, -75, 0, 50), "Botão de Teste")
+local testButton = Instance.new("TextButton")
+testButton.Size = UDim2.new(0, 150, 0, 50)
+testButton.Position = UDim2.new(0.5, -75, 0, 50)
+testButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+testButton.Text = "Botão de Teste"
+testButton.TextColor3 = Color3.fromRGB(255,255,255)
+testButton.Font = Enum.Font.GothamSemibold
+testButton.TextSize = 20
+testButton.AutoButtonColor = false
+testButton.Parent = teleportTabFrame
+
+local uicornerTest = Instance.new("UICorner")
+uicornerTest.CornerRadius = UDim.new(0, 15)
+uicornerTest.Parent = testButton
+
+testButton.MouseEnter:Connect(function()
+    TweenService:Create(testButton, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(70, 70, 70)}):Play()
+end)
+testButton.MouseLeave:Connect(function()
+    TweenService:Create(testButton, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(50, 50, 50)}):Play()
+end)
+
 testButton.MouseButton1Click:Connect(function()
-    print("Botão de teste clicado!")
+    print("[Script] Botão de teste clicado!")
 end)
 
--- Remover tela loading e blur depois de 2s
-wait(2)
-loadingFrame:Destroy()
-blur:Destroy()
-mainFrame.Visible = true
+-- Coroutine para remover loading e blur depois de 2 segundos
+coroutine.wrap(function()
+    wait(2)
+    if loadingFrame and loadingFrame.Parent then
+        loadingFrame:Destroy()
+    end
+    if blur and blur.Parent then
+        blur:Destroy()
+    end
+    mainFrame.Visible = true
+    print("[Script] Loading removido e GUI mostrada.")
+end)()
