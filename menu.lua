@@ -6,12 +6,14 @@ local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
--- Criar blur (ou pegar existente)
+-- Criar ou pegar BlurEffect
 local blur = Lighting:FindFirstChildOfClass("BlurEffect")
 if not blur then
     blur = Instance.new("BlurEffect")
     blur.Size = 24
     blur.Parent = Lighting
+else
+    blur.Size = 24
 end
 
 -- Criar ScreenGui
@@ -55,42 +57,44 @@ mainFrame.ZIndex = 2
 mainFrame.Name = "MainFrame"
 
 -- Tornar mainFrame arrastável
-local dragging
-local dragInput
-local dragStart
-local startPos
+do
+    local dragging
+    local dragInput
+    local dragStart
+    local startPos
 
-local function updatePosition(input)
-    local delta = input.Position - dragStart
-    mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
-                                  startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    local function updatePosition(input)
+        local delta = input.Position - dragStart
+        mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X,
+                                      startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+
+    mainFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = mainFrame.Position
+
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    mainFrame.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and input == dragInput then
+            updatePosition(input)
+        end
+    end)
 end
-
-mainFrame.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-        dragging = true
-        dragStart = input.Position
-        startPos = mainFrame.Position
-
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
-            end
-        end)
-    end
-end)
-
-mainFrame.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-        dragInput = input
-    end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-    if dragging and input == dragInput then
-        updatePosition(input)
-    end
-end)
 
 -- Botão fechar (X) no canto superior direito
 local closeButton = Instance.new("TextButton")
@@ -161,7 +165,6 @@ local function hideGUI()
     guiVisible = false
 end
 
--- Ativar botão flutuante mobile e esconder GUI no mobile no início
 if isMobile then
     print("[Script] Plataforma: Mobile")
     mainFrame.Visible = true
@@ -325,7 +328,7 @@ supportButton.MouseLeave:Connect(function()
 end)
 
 supportButton.MouseButton1Click:Connect(function()
-    local url = "https://www.roblox.com/users/12345678/profile"
+    local url = "https://www.roblox.com/users/12345678/profile" -- Troque aqui para o link real que quiser
     if setclipboard then
         setclipboard(url)
     end
@@ -431,14 +434,16 @@ end
 
 refreshPlayerList()
 
+--... (tudo que enviei antes permanece igual até aqui)
+
 local teleportButton = Instance.new("TextButton")
 teleportButton.Size = UDim2.new(0, 200, 0, 40)
 teleportButton.Position = UDim2.new(0.5, -100, 0, 210)
-teleportButton.BackgroundColor3 = Color3.fromRGB(50,50,50)
-teleportButton.TextColor3 = Color3.fromRGB(255, 255, 255) -- CORREÇÃO AQUI
+teleportButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+teleportButton.Text = "Teleportar"
+teleportButton.TextColor3 = Color3.new(1, 1, 1)
 teleportButton.Font = Enum.Font.GothamSemibold
 teleportButton.TextSize = 20
-teleportButton.Text = "Teleportar"
 teleportButton.AutoButtonColor = false
 teleportButton.Parent = teleportTabFrame
 
@@ -447,10 +452,10 @@ uicornerTeleport.CornerRadius = UDim.new(0, 15)
 uicornerTeleport.Parent = teleportButton
 
 teleportButton.MouseEnter:Connect(function()
-    TweenService:Create(teleportButton, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(70,70,70)}):Play()
+    TweenService:Create(teleportButton, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(70, 70, 70)}):Play()
 end)
 teleportButton.MouseLeave:Connect(function()
-    TweenService:Create(teleportButton, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(50,50,50)}):Play()
+    TweenService:Create(teleportButton, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(50, 50, 50)}):Play()
 end)
 
 teleportButton.MouseButton1Click:Connect(function()
