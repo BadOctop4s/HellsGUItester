@@ -147,7 +147,7 @@ userNameLabel.TextWrapped = true
 
 local creatorLabel = Instance.new("TextLabel")
 creatorLabel.Text = "Criado por Eodraxkk"
-creatorLabel.Font = Enum.Font.Gotham -- corrigido aqui
+creatorLabel.Font = Enum.Font.Gotham
 creatorLabel.TextSize = 18
 creatorLabel.TextColor3 = Color3.fromRGB(180,180,180)
 creatorLabel.BackgroundTransparency = 1
@@ -187,32 +187,147 @@ supportButton.MouseButton1Click:Connect(function()
     print("[Script] Link para apoiar copiado para área de transferência.")
 end)
 
--- Conteúdo Teleport
+-- Conteúdo Teleport atualizado
 
-local testButton = Instance.new("TextButton")
-testButton.Size = UDim2.new(0, 150, 0, 50)
-testButton.Position = UDim2.new(0.5, -75, 0, 50)
-testButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-testButton.Text = "Botão de Teste"
-testButton.TextColor3 = Color3.fromRGB(255,255,255)
-testButton.Font = Enum.Font.GothamSemibold
-testButton.TextSize = 20
-testButton.AutoButtonColor = false
-testButton.Parent = teleportTabFrame
+local selectedPlayer = nil
 
-local uicornerTest = Instance.new("UICorner")
-uicornerTest.CornerRadius = UDim.new(0, 15)
-uicornerTest.Parent = testButton
+local dropdownButton = Instance.new("TextButton")
+dropdownButton.Size = UDim2.new(0, 200, 0, 40)
+dropdownButton.Position = UDim2.new(0.5, -100, 0, 20)
+dropdownButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+dropdownButton.TextColor3 = Color3.fromRGB(255,255,255)
+dropdownButton.Font = Enum.Font.GothamSemibold
+dropdownButton.TextSize = 20
+dropdownButton.Text = "Selecione um jogador"
+dropdownButton.AutoButtonColor = false
+dropdownButton.Parent = teleportTabFrame
 
-testButton.MouseEnter:Connect(function()
-    TweenService:Create(testButton, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(70, 70, 70)}):Play()
+local uicornerDrop = Instance.new("UICorner")
+uicornerDrop.CornerRadius = UDim.new(0, 15)
+uicornerDrop.Parent = dropdownButton
+
+dropdownButton.MouseEnter:Connect(function()
+    TweenService:Create(dropdownButton, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(70, 70, 70)}):Play()
 end)
-testButton.MouseLeave:Connect(function()
-    TweenService:Create(testButton, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(50, 50, 50)}):Play()
+dropdownButton.MouseLeave:Connect(function()
+    TweenService:Create(dropdownButton, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(50, 50, 50)}):Play()
 end)
 
-testButton.MouseButton1Click:Connect(function()
-    print("[Script] Botão de teste clicado!")
+local dropdownList = Instance.new("Frame")
+dropdownList.Size = UDim2.new(0, 200, 0, 0)
+dropdownList.Position = UDim2.new(0.5, -100, 0, 60)
+dropdownList.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+dropdownList.ClipsDescendants = true
+dropdownList.Parent = teleportTabFrame
+
+local uicornerList = Instance.new("UICorner")
+uicornerList.CornerRadius = UDim.new(0, 15)
+uicornerList.Parent = dropdownList
+
+local dropdownOpen = false
+local function toggleDropdown()
+    if dropdownOpen then
+        TweenService:Create(dropdownList, TweenInfo.new(0.3), {Size = UDim2.new(0, 200, 0, 0)}):Play()
+        dropdownOpen = false
+    else
+        local playerCount = #Players:GetPlayers() - 1
+        local height = math.clamp(playerCount * 35, 0, 140)
+        TweenService:Create(dropdownList, TweenInfo.new(0.3), {Size = UDim2.new(0, 200, 0, height)}):Play()
+        dropdownOpen = true
+    end
+end
+
+dropdownButton.MouseButton1Click:Connect(toggleDropdown)
+
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Padding = UDim.new(0, 5)
+UIListLayout.Parent = dropdownList
+
+local function refreshPlayerList()
+    for _, child in pairs(dropdownList:GetChildren()) do
+        if child:IsA("TextButton") then
+            child:Destroy()
+        end
+    end
+
+    for _, plr in pairs(Players:GetPlayers()) do
+        if plr ~= player then
+            local btn = Instance.new("TextButton")
+            btn.Size = UDim2.new(1, -10, 0, 30)
+            btn.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+            btn.TextColor3 = Color3.fromRGB(255, 255, 255)
+            btn.Font = Enum.Font.Gotham
+            btn.TextSize = 18
+            btn.Text = plr.Name
+            btn.AutoButtonColor = false
+            btn.Parent = dropdownList
+            btn.LayoutOrder = 0
+
+            local uic = Instance.new("UICorner")
+            uic.CornerRadius = UDim.new(0, 10)
+            uic.Parent = btn
+
+            btn.MouseEnter:Connect(function()
+                TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(80,80,80)}):Play()
+            end)
+            btn.MouseLeave:Connect(function()
+                TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60,60,60)}):Play()
+            end)
+
+            btn.MouseButton1Click:Connect(function()
+                selectedPlayer = plr
+                dropdownButton.Text = plr.Name
+                toggleDropdown()
+            end)
+        end
+    end
+end
+
+refreshPlayerList()
+
+local teleportButton = Instance.new("TextButton")
+teleportButton.Size = UDim2.new(0, 200, 0, 40)
+teleportButton.Position = UDim2.new(0.5, -100, 0, 210)
+teleportButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+teleportButton.TextColor3 = Color3.fromRGB(255,255,255)
+teleportButton.Font = Enum.Font.GothamSemibold
+teleportButton.TextSize = 20
+teleportButton.Text = "Teleportar"
+teleportButton.AutoButtonColor = false
+teleportButton.Parent = teleportTabFrame
+
+local uicornerTeleport = Instance.new("UICorner")
+uicornerTeleport.CornerRadius = UDim.new(0, 15)
+uicornerTeleport.Parent = teleportButton
+
+teleportButton.MouseEnter:Connect(function()
+    TweenService:Create(teleportButton, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(70, 70, 70)}):Play()
+end)
+teleportButton.MouseLeave:Connect(function()
+    TweenService:Create(teleportButton, TweenInfo.new(0.3), {BackgroundColor3 = Color3.fromRGB(50, 50, 50)}):Play()
+end)
+
+teleportButton.MouseButton1Click:Connect(function()
+    if selectedPlayer and selectedPlayer.Character and selectedPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        local hrp = selectedPlayer.Character.HumanoidRootPart
+        local char = player.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            char.HumanoidRootPart.CFrame = hrp.CFrame + Vector3.new(0, 3, 0)
+            print("[Script] Teleportado para " .. selectedPlayer.Name)
+        else
+            print("[Script] Seu personagem não está pronto.")
+        end
+    else
+        print("[Script] Nenhum jogador válido selecionado.")
+    end
+end)
+
+Players.PlayerAdded:Connect(function()
+    refreshPlayerList()
+end)
+Players.PlayerRemoving:Connect(function()
+    refreshPlayerList()
 end)
 
 coroutine.wrap(function()
