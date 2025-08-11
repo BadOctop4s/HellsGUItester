@@ -4,10 +4,8 @@ local Lighting = game:GetService("Lighting")
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
--- Debug print
 print("[Script] Iniciando script GUI executor...")
 
--- Função para criar borda arredondada
 local function createRoundedFrame(parent, size, position, bgColor)
     local frame = Instance.new("Frame")
     frame.Size = size
@@ -16,15 +14,14 @@ local function createRoundedFrame(parent, size, position, bgColor)
     frame.AnchorPoint = Vector2.new(0.5, 0.5)
     frame.ClipsDescendants = true
     frame.Parent = parent
-    
+
     local uicorner = Instance.new("UICorner")
     uicorner.CornerRadius = UDim.new(0, 15)
     uicorner.Parent = frame
-    
+
     return frame
 end
 
--- Pegar blur existente ou criar um novo
 local blur = Lighting:FindFirstChildOfClass("BlurEffect")
 if not blur then
     blur = Instance.new("BlurEffect")
@@ -35,12 +32,10 @@ else
     print("[Script] Blur existente encontrado")
 end
 
--- Criar ScreenGui
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "TestGUIExecutor"
 screenGui.Parent = playerGui
 
--- Tela de loading
 local loadingFrame = createRoundedFrame(screenGui, UDim2.new(0, 300, 0, 150), UDim2.new(0.5, 0, 0.5, 0), Color3.fromRGB(35, 35, 35))
 local loadingLabel = Instance.new("TextLabel")
 loadingLabel.Text = "Carregando..."
@@ -51,11 +46,9 @@ loadingLabel.Font = Enum.Font.GothamBold
 loadingLabel.TextSize = 28
 loadingLabel.Parent = loadingFrame
 
--- Criar janela principal
 local mainFrame = createRoundedFrame(screenGui, UDim2.new(0, 500, 0, 350), UDim2.new(0.5, 0, 0.5, 0), Color3.fromRGB(30,30,30))
 mainFrame.Visible = false
 
--- Abas
 local tabButtonsFrame = Instance.new("Frame")
 tabButtonsFrame.Size = UDim2.new(1, 0, 0, 40)
 tabButtonsFrame.BackgroundTransparency = 1
@@ -74,18 +67,18 @@ local function createTabButton(name, posScale)
     btn.TextSize = 18
     btn.AutoButtonColor = false
     btn.Parent = tabButtonsFrame
-    
+
     local uicorner = Instance.new("UICorner")
     uicorner.CornerRadius = UDim.new(0, 15)
     uicorner.Parent = btn
-    
+
     btn.MouseEnter:Connect(function()
         TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(80,80,80)}):Play()
     end)
     btn.MouseLeave:Connect(function()
         TweenService:Create(btn, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60,60,60)}):Play()
     end)
-    
+
     return btn
 end
 
@@ -124,7 +117,7 @@ teleportTabBtn.MouseButton1Click:Connect(function()
     switchTab("Teleport")
 end)
 
--- Conteúdo Main --
+-- Conteúdo Main
 
 local thumbType = Enum.ThumbnailType.HeadShot
 local thumbSize = Enum.ThumbnailSize.Size180x180
@@ -154,7 +147,7 @@ userNameLabel.TextWrapped = true
 
 local creatorLabel = Instance.new("TextLabel")
 creatorLabel.Text = "Criado por Eodraxkk"
-creatorLabel.Font = Enum.Font.GothamItalic
+creatorLabel.Font = Enum.Font.Gotham -- corrigido aqui
 creatorLabel.TextSize = 18
 creatorLabel.TextColor3 = Color3.fromRGB(180,180,180)
 creatorLabel.BackgroundTransparency = 1
@@ -194,7 +187,7 @@ supportButton.MouseButton1Click:Connect(function()
     print("[Script] Link para apoiar copiado para área de transferência.")
 end)
 
--- Conteúdo Teleport --
+-- Conteúdo Teleport
 
 local testButton = Instance.new("TextButton")
 testButton.Size = UDim2.new(0, 150, 0, 50)
@@ -222,7 +215,6 @@ testButton.MouseButton1Click:Connect(function()
     print("[Script] Botão de teste clicado!")
 end)
 
--- Coroutine para remover loading e blur depois de 2 segundos
 coroutine.wrap(function()
     wait(2)
     if loadingFrame and loadingFrame.Parent then
