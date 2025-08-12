@@ -4,7 +4,7 @@ local TweenService = game:GetService("TweenService")
 local HttpService = game:GetService("HttpService")
 
 -- Configurações
-local REPO_URL = "https://raw.githubusercontent.com/Eodraxkk/RoyalHub/main/MainGUI.lua"
+local REPO_URL = "https://raw.githubusercontent.com/badoctopus/RoyalHub/main/Source.lua"
 local LOADING_MIN_TIME = 2.5 -- Tempo mínimo de loading (para efeito visual)
 
 -- Criar GUI de loading
