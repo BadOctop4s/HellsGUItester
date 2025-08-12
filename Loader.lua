@@ -120,24 +120,6 @@ spawn(function()
         warn("ERRO NO SCRIPT: "..err)
     end
 end)
-    updateStatus("Executando...", 0.9)
-    wait(0.3)
-    
-    local execSuccess, execErr = pcall(compiled)
-    if not execSuccess then
-        updateStatus("Erro na execução", 1)
-        progressBar.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
-        warn("Erro na execução: "..tostring(execErr))
-        wait(2)
-        screenGui:Destroy()
-        return
-    end
-
-    updateStatus("Sucesso! Carregando...", 1)
-    wait(0.5)
-    
-    screenGui:Destroy()
-end)
 
 -- Fechar se demorar muito
 delay(10, function()
