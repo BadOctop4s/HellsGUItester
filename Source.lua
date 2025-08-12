@@ -21,7 +21,8 @@ local mainFrame = Instance.new("Frame")
 local UserInputService = game:GetService("UserInputService")
 
 if UserInputService.TouchEnabled then
-    mainFrame.Size = UDim2.new(0, 350, 0, 385) -- menor para mobile
+    mainFrame.Size = UDim2.new(0, 325, 0, 358)
+ -- menor para mobile
 else
     mainFrame.Size = UDim2.new(0, 500, 0, 550) -- tamanho padrão para PC
 end
