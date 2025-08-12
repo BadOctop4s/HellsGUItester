@@ -78,35 +78,48 @@ end)
 
 -- Carregamento principal
 spawn(function()
-    updateStatus("Conectando ao GitHub...", 0.2)
+    updateStatus("Conectando...", 0.2)
     
-    local success, response = pcall(function()
-        return HttpService:GetAsync(REPO_URL, true)
+    -- Teste de conexão
+    local testSuccess = pcall(function()
+        game:HttpGet("https://google.com")
+    end)
+    
+    if not testSuccess then
+        updateStatus("Sem conexão", 1)
+        progressBar.BackgroundColor3 = Color3.new(1, 0, 0)
+        return
+    end
+
+    -- Carregar script
+    local success, content = pcall(function()
+        return game:HttpGet(REPO_URL)
     end)
     
     if not success then
-        updateStatus("Falha na conexão", 1)
-        progressBar.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
-        wait(2)
-        screenGui:Destroy()
+        updateStatus("URL inválida", 1)
+        progressBar.BackgroundColor3 = Color3.new(1, 0, 0)
+        warn("ERRO: "..content)
+        return
+    end
+    
+    if #content < 50 then -- Verifica se veio conteúdo mínimo
+        updateStatus("Script vazio", 1)
+        progressBar.BackgroundColor3 = Color3.new(1, 0, 0)
         return
     end
 
-    updateStatus("Validando script...", 0.5)
-    wait(0.5)
+    updateStatus("Executando...", 1)
+    local success, err = pcall(loadstring(content))
     
-    updateStatus("Compilando...", 0.7)
-    local compiled, err = loadstring(response)
-    
-    if not compiled then
-        updateStatus("Erro na compilação", 1)
-        progressBar.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
-        warn("Erro no script: "..tostring(err))
-        wait(2)
+    if success then
         screenGui:Destroy()
-        return
+    else
+        updateStatus("Erro no script", 1)
+        progressBar.BackgroundColor3 = Color3.new(1, 0, 0)
+        warn("ERRO NO SCRIPT: "..err)
     end
-
+end)
     updateStatus("Executando...", 0.9)
     wait(0.3)
     
