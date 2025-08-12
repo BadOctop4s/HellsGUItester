@@ -20,11 +20,15 @@ screenGui.Parent = game.CoreGui
 local mainFrame = Instance.new("Frame")
 local UserInputService = game:GetService("UserInputService")
 
-if UserInputService.TouchEnabled then
-    mainFrame.Size = UDim2.new(0, 250, 0, 275)-- menor para mobile
-else
-    mainFrame.Size = UDim2.new(0, 500, 0, 550) -- tamanho padrão para PC
-end
+local isMobile = UserInputService.TouchEnabled
+
+local guiWidth = isMobile and 325 or 500
+local guiHeight = isMobile and 358 or 550
+
+mainFrame.Size = UDim2.new(0, guiWidth, 0, guiHeight)
+
+-- Ajustar posição para mobile (um pouco mais para cima)
+mainFrame.Position = isMobile and UDim2.new(0.5, 0, 0.45, 0) or UDim2.new(0.5, 0, 0.5, 0)
 
 mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
 mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -114,6 +118,9 @@ for _, category in ipairs(categories) do
         itemButton.TextXAlignment = Enum.TextXAlignment.Left
         itemButton.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
         itemButton.Parent = sidebar
+        itemButton.TextWrapped = true
+        itemButton.ClipsDescendants = true
+
         Instance.new("UICorner", itemButton).CornerRadius = UDim.new(0, 4)
         
         buttonY = buttonY + 35
