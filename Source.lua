@@ -1,6 +1,7 @@
--- Royal Hub GUI (Brookhaven Version)
+-- Royal Hub GUI
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
+local UserInputService = game:GetService("UserInputService")
 
 -- Configurações
 local LocalPlayer = Players.LocalPlayer
@@ -17,27 +18,31 @@ screenGui.Name = "RoyalHub"
 screenGui.Parent = game.CoreGui
 
 -- Frame principal
-local mainFrame = Instance.new("Frame")
-local UserInputService = game:GetService("UserInputService")
-
 local isMobile = UserInputService.TouchEnabled
 
 local guiWidth = isMobile and 325 or 500
 local guiHeight = isMobile and 358 or 550
 
+local mainFrame = Instance.new("Frame")
 mainFrame.Size = UDim2.new(0, guiWidth, 0, guiHeight)
 
 -- Ajustar posição para mobile (um pouco mais para cima)
 mainFrame.Position = isMobile and UDim2.new(0.5, 0, 0.45, 0) or UDim2.new(0.5, 0, 0.5, 0)
-
-mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
 mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
 mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
 mainFrame.Parent = screenGui
+
 Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 8)
 local uiStroke = Instance.new("UIStroke", mainFrame)
 uiStroke.Color = themeColor
 uiStroke.Thickness = 2
+
+if not UserInputService.TouchEnabled then -- Verifica se é desktop
+    mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
+    local isDesktop = UserInputService.TouchEnabled == false
+    local guiWidth = isDesktop and 500 or 325
+    local guiHeight = isDesktop and 550 or 358
+end
 
 -- Barra de título
 local titleBar = Instance.new("Frame")
@@ -47,7 +52,7 @@ titleBar.Parent = mainFrame
 Instance.new("UICorner", titleBar).CornerRadius = UDim.new(0, 8)
 
 local titleText = Instance.new("TextLabel")
-titleText.Text = "ROYAL HUB | Brookhaven RP"
+titleText.Text = "ROYAL HUB | EXCLUSIVO"
 titleText.Size = UDim2.new(1, 0, 1, 0)
 titleText.Font = Enum.Font.GothamBold
 titleText.TextColor3 = Color3.new(1, 1, 1)
@@ -90,43 +95,11 @@ local categories = {
         "Casa",
         "Carro"
     }},
-    {"Configurações", {}}
+    {"Configurações", {
+        "Tema",
+        "Sobre",
+    }}
 }
-
-local buttonY = 10
-for _, category in ipairs(categories) do
-    local categoryLabel = Instance.new("TextLabel")
-    categoryLabel.Text = " "..category[1]
-    categoryLabel.Size = UDim2.new(1, -10, 0, 25)
-    categoryLabel.Position = UDim2.new(0, 5, 0, buttonY)
-    categoryLabel.Font = Enum.Font.GothamBold
-    categoryLabel.TextColor3 = themeColor
-    categoryLabel.TextSize = 14
-    categoryLabel.TextXAlignment = Enum.TextXAlignment.Left
-    categoryLabel.BackgroundTransparency = 1
-    categoryLabel.Parent = sidebar
-    buttonY = buttonY + 30
-    
-    for _, item in ipairs(category[2]) do
-        local itemButton = Instance.new("TextButton")
-        itemButton.Text = "   "..item
-        itemButton.Size = UDim2.new(1, -10, 0, 30)
-        itemButton.Position = UDim2.new(0, 5, 0, buttonY)
-        itemButton.Font = Enum.Font.Gotham
-        itemButton.TextColor3 = Color3.new(1, 1, 1)
-        itemButton.TextSize = 13
-        itemButton.TextXAlignment = Enum.TextXAlignment.Left
-        itemButton.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
-        itemButton.Parent = sidebar
-        itemButton.TextWrapped = true
-        itemButton.ClipsDescendants = true
-
-        Instance.new("UICorner", itemButton).CornerRadius = UDim.new(0, 4)
-        
-        buttonY = buttonY + 35
-    end
-    buttonY = buttonY + 15
-end
 
 -- Conteúdo principal
 local contentFrame = Instance.new("Frame")
@@ -135,16 +108,26 @@ contentFrame.Position = UDim2.new(0, 155, 0, 45)
 contentFrame.BackgroundTransparency = 1
 contentFrame.Parent = mainFrame
 
--- Conteúdo da página inicial (exemplo)
+-- Função para mostrar apenas a página selecionada
+local pages = {}
+
+local function showPage(pageName)
+    for name, frame in pairs(pages) do
+        frame.Visible = (name == pageName)
+    end
+end
+
+-- Criar página "Início" com seu conteúdo original
 local homeContent = Instance.new("Frame")
 homeContent.Size = UDim2.new(1, 0, 1, 0)
 homeContent.BackgroundTransparency = 1
 homeContent.Visible = true
 homeContent.Parent = contentFrame
+pages["Início"] = homeContent
 
 -- Título do mapa
 local mapTitle = Instance.new("TextLabel")
-mapTitle.Text = "Mapa Status"
+mapTitle.Text = "Mapa atual:"
 mapTitle.Size = UDim2.new(1, 0, 0, 30)
 mapTitle.Font = Enum.Font.GothamBold
 mapTitle.TextColor3 = themeColor
@@ -154,7 +137,7 @@ mapTitle.Parent = homeContent
 
 -- Informações do jogo
 local gameInfo = Instance.new("TextLabel")
-gameInfo.Text = "Nome do Jogo: Brookhaven RP\nExecutor: Royal Hub"
+gameInfo.Text = "Nome do Jogo: Brookhaven RP\nScript: Royal Hub"
 gameInfo.Size = UDim2.new(1, 0, 0, 50)
 gameInfo.Position = UDim2.new(0, 0, 0, 40)
 gameInfo.Font = Enum.Font.Gotham
@@ -189,7 +172,7 @@ discordTitle.BackgroundTransparency = 1
 discordTitle.Parent = discordFrame
 
 local discordText = Instance.new("TextLabel")
-discordText.Text = "Junte-se a nossa comunidade discord para receber informações sobre menu!"
+discordText.Text = "Junte-se a nossa comunidade discord para receber informações sobre o menu!"
 discordText.Size = UDim2.new(1, -20, 0, 50)
 discordText.Position = UDim2.new(0, 10, 0, 35)
 discordText.Font = Enum.Font.Gotham
@@ -218,7 +201,7 @@ webhookFrame.Parent = homeContent
 Instance.new("UICorner", webhookFrame).CornerRadius = UDim.new(0, 6)
 
 local webhookTitle = Instance.new("TextLabel")
-webhookTitle.Text = "Sistema De WebHook"
+webhookTitle.Text = "feedback"
 webhookTitle.Size = UDim2.new(1, 0, 0, 30)
 webhookTitle.Font = Enum.Font.GothamBold
 webhookTitle.TextColor3 = themeColor
@@ -227,7 +210,7 @@ webhookTitle.BackgroundTransparency = 1
 webhookTitle.Parent = webhookFrame
 
 local webhookText = Instance.new("TextLabel")
-webhookText.Text = "De ideia de funções para melhorar o hub."
+webhookText.Text = "Ajude-nos a melhorar o Royal Hub enviando suas ideias ou sugestões!"
 webhookText.Size = UDim2.new(1, -20, 0, 40)
 webhookText.Position = UDim2.new(0, 10, 0, 35)
 webhookText.Font = Enum.Font.Gotham
@@ -277,12 +260,12 @@ announcementTitle.BackgroundTransparency = 1
 announcementTitle.Parent = announcementFrame
 
 local announcementText = Instance.new("TextLabel")
-announcementText.Text = "Aviso Externo\nAviso Externo2"
+announcementText.Text = "Menu Criado!"
 announcementText.Size = UDim2.new(1, -20, 1, -35)
 announcementText.Position = UDim2.new(0, 10, 0, 35)
 announcementText.Font = Enum.Font.Gotham
 announcementText.TextColor3 = Color3.new(1, 1, 1)
-announcementText.TextSize = 13
+announcementText.TextSize = 15
 announcementText.TextXAlignment = Enum.TextXAlignment.Left
 announcementText.TextYAlignment = Enum.TextYAlignment.Top
 announcementText.BackgroundTransparency = 1
@@ -316,5 +299,248 @@ UserInputService.InputChanged:Connect(function(input)
         mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
     end
 end)
+
+-- Função para criar páginas vazias (com label simples)
+local function createPage(name)
+    local page = Instance.new("Frame")
+    page.Size = UDim2.new(1, 0, 1, 0)
+    page.BackgroundTransparency = 1
+    page.Visible = false
+    page.Parent = contentFrame
+    
+    local label = Instance.new("TextLabel")
+    label.Text = "Página "..name
+    label.Size = UDim2.new(1, 0, 0, 30)
+    label.Font = Enum.Font.GothamBold
+    label.TextColor3 = themeColor
+    label.TextSize = 18
+    label.BackgroundTransparency = 1
+    label.Parent = page
+    
+    pages[name] = page
+end
+
+-- Criar páginas para todas as outras opções (exceto "Início" que já existe)
+for _, category in ipairs(categories) do
+    for _, item in ipairs(category[2]) do
+        if item ~= "Início" and not pages[item] then
+            createPage(item)
+        end
+    end
+end
+-- pagina Trolar com botoes
+    local UserInputService = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+
+local camera = workspace.CurrentCamera
+local localPlayer = Players.LocalPlayer
+
+local viewPage = pages["Trolar"] -- substitua pelo nome da sua página
+
+-- Função pra criar UICorner rapidinho
+local function createUICorner(parent, radius)
+    local uc = Instance.new("UICorner")
+    uc.CornerRadius = UDim.new(0, radius or 6)
+    uc.Parent = parent
+    return uc
+end
+
+-- Container dropdown
+local dropdownFrame = Instance.new("Frame")
+dropdownFrame.Size = UDim2.new(0, 220, 0, 36)
+dropdownFrame.Position = UDim2.new(0, 10, 0, 50)
+dropdownFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
+dropdownFrame.Parent = viewPage
+createUICorner(dropdownFrame, 8)
+
+-- Label com jogador selecionado
+local selectedLabel = Instance.new("TextLabel")
+selectedLabel.Text = "Selecione um jogador"
+selectedLabel.Size = UDim2.new(1, -40, 1, 0)
+selectedLabel.Position = UDim2.new(0, 10, 0, 0)
+selectedLabel.BackgroundTransparency = 1
+selectedLabel.TextColor3 = Color3.new(1,1,1)
+selectedLabel.Font = Enum.Font.Gotham
+selectedLabel.TextSize = 14
+selectedLabel.TextXAlignment = Enum.TextXAlignment.Left
+selectedLabel.Parent = dropdownFrame
+
+-- Botão abrir/fechar dropdown
+local toggleButton = Instance.new("TextButton")
+toggleButton.Text = "▼"
+toggleButton.Size = UDim2.new(0, 30, 1, 0)
+toggleButton.Position = UDim2.new(1, -30, 0, 0)
+toggleButton.BackgroundColor3 = Color3.fromRGB(60, 60, 65)
+toggleButton.TextColor3 = Color3.new(1,1,1)
+toggleButton.Font = Enum.Font.GothamBold
+toggleButton.TextSize = 16
+toggleButton.Parent = dropdownFrame
+createUICorner(toggleButton, 8)
+
+-- Lista scrollável (inicialmente oculta)
+local listFrame = Instance.new("Frame")
+listFrame.Size = UDim2.new(0, 220, 0, 160)
+listFrame.Position = UDim2.new(0, 10, 0, 90)
+listFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
+listFrame.Visible = false
+listFrame.Parent = viewPage
+createUICorner(listFrame, 8)
+
+local scroll = Instance.new("ScrollingFrame")
+scroll.Size = UDim2.new(1, 0, 1, 0)
+scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+scroll.ScrollBarThickness = 6
+scroll.BackgroundTransparency = 1
+scroll.Parent = listFrame
+
+local layout = Instance.new("UIListLayout")
+layout.Padding = UDim.new(0, 4)
+layout.Parent = scroll
+
+-- Variável pra player selecionado
+local selectedPlayer = nil
+
+-- Atualiza lista de jogadores na dropdown
+local function updatePlayerList()
+    -- Limpa itens antigos
+    for _, child in pairs(scroll:GetChildren()) do
+        if child:IsA("TextButton") then
+            child:Destroy()
+        end
+    end
+
+    local players = Players:GetPlayers()
+    for i, player in ipairs(players) do
+        local playerButton = Instance.new("TextButton")
+        playerButton.Text = player.Name
+        playerButton.Size = UDim2.new(1, -10, 0, 32)
+        playerButton.BackgroundColor3 = Color3.fromRGB(70, 70, 80)
+        playerButton.TextColor3 = Color3.new(1, 1, 1)
+        playerButton.Font = Enum.Font.Gotham
+        playerButton.TextSize = 14
+        playerButton.Parent = scroll
+        createUICorner(playerButton, 6)
+
+        playerButton.MouseButton1Click:Connect(function()
+            selectedPlayer = player
+            selectedLabel.Text = player.Name
+            listFrame.Visible = false
+            toggleButton.Text = "▼"
+        end)
+    end
+
+    scroll.CanvasSize = UDim2.new(0, 0, 0, #players * 36)
+end
+
+toggleButton.MouseButton1Click:Connect(function()
+    listFrame.Visible = not listFrame.Visible
+    toggleButton.Text = listFrame.Visible and "▲" or "▼"
+end)
+
+Players.PlayerAdded:Connect(updatePlayerList)
+Players.PlayerRemoving:Connect(function()
+    if selectedPlayer and not table.find(Players:GetPlayers(), selectedPlayer) then
+        selectedPlayer = nil
+        selectedLabel.Text = "Selecione um jogador"
+    end
+    updatePlayerList()
+end)
+
+updatePlayerList()
+
+-- Botões para View e Destravar câmera
+local buttonsFrame = Instance.new("Frame")
+buttonsFrame.Size = UDim2.new(0, 150, 0, 36)
+buttonsFrame.Position = UDim2.new(0, 240, 0, 50)
+buttonsFrame.BackgroundTransparency = 1
+buttonsFrame.Parent = viewPage
+
+local viewBtn = Instance.new("TextButton")
+viewBtn.Text = "View"
+viewBtn.Size = UDim2.new(0, 70, 1, 0)
+viewBtn.BackgroundColor3 = Color3.fromRGB(130, 60, 255)
+viewBtn.TextColor3 = Color3.new(1, 1, 1)
+viewBtn.Font = Enum.Font.GothamBold
+viewBtn.TextSize = 14
+viewBtn.Parent = buttonsFrame
+createUICorner(viewBtn, 6)
+
+local stopViewBtn = Instance.new("TextButton")
+stopViewBtn.Text = "Destravar"
+stopViewBtn.Size = UDim2.new(0, 70, 1, 0)
+stopViewBtn.Position = UDim2.new(0, 80, 0, 0)
+stopViewBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+stopViewBtn.TextColor3 = Color3.new(1, 1, 1)
+stopViewBtn.Font = Enum.Font.GothamBold
+stopViewBtn.TextSize = 14
+stopViewBtn.Parent = buttonsFrame
+createUICorner(stopViewBtn, 6)
+
+local viewing = false
+local originalCameraSubject = camera.CameraSubject
+
+viewBtn.MouseButton1Click:Connect(function()
+    if not selectedPlayer then return end
+
+    if not viewing then
+        if selectedPlayer.Character and selectedPlayer.Character:FindFirstChild("Humanoid") then
+            camera.CameraSubject = selectedPlayer.Character.Humanoid
+            viewing = true
+            viewBtn.Text = "Visualizando"
+        end
+    end
+end)
+
+stopViewBtn.MouseButton1Click:Connect(function()
+    if viewing then
+        camera.CameraSubject = originalCameraSubject
+        viewing = false
+        viewBtn.Text = "View"
+    end
+end)
+-- Criar botões do sidebar com evento para troca de página
+local buttonY = 10
+for _, category in ipairs(categories) do
+    local categoryLabel = Instance.new("TextLabel")
+    categoryLabel.Text = " "..category[1]
+    categoryLabel.Size = UDim2.new(1, -10, 0, 25)
+    categoryLabel.Position = UDim2.new(0, 5, 0, buttonY)
+    categoryLabel.Font = Enum.Font.GothamBold
+    categoryLabel.TextColor3 = themeColor
+    categoryLabel.TextSize = 14
+    categoryLabel.TextXAlignment = Enum.TextXAlignment.Left
+    categoryLabel.BackgroundTransparency = 1
+    categoryLabel.Parent = sidebar
+    buttonY = buttonY + 30
+
+    for _, item in ipairs(category[2]) do
+        local itemButton = Instance.new("TextButton")
+        itemButton.Text = "   "..item
+        itemButton.Size = UDim2.new(1, -10, 0, 30)
+        itemButton.Position = UDim2.new(0, 5, 0, buttonY)
+        itemButton.Font = Enum.Font.Gotham
+        itemButton.TextColor3 = Color3.new(1, 1, 1)
+        itemButton.TextSize = 13
+        itemButton.TextXAlignment = Enum.TextXAlignment.Left
+        itemButton.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
+        itemButton.Parent = sidebar
+        itemButton.TextWrapped = true
+        itemButton.ClipsDescendants = true
+
+        Instance.new("UICorner", itemButton).CornerRadius = UDim.new(0, 4)
+
+        itemButton.MouseButton1Click:Connect(function()
+            if pages[item] then
+                showPage(item)
+            end
+        end)
+
+        buttonY = buttonY + 35
+    end
+    buttonY = buttonY + 15
+end
+
+-- Mostrar a página inicial ao abrir
+showPage("Início")
 
 print("Royal Hub GUI carregada com sucesso!")

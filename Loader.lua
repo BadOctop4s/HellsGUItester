@@ -1,14 +1,18 @@
--- Loader.lua (Para colocar em StarterPlayerScripts)
+-- Loader.lua
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local HttpService = game:GetService("HttpService")
 
--- Configurações
--- Substitua a URL por esta:
 local REPO_URL = "https://raw.githubusercontent.com/BadOctop4s/RoyalHub/main/Source.lua"
-local LOADING_MIN_TIME = 2.5 -- Tempo mínimo de loading (para efeito visual)
+local LOADING_MIN_TIME = 2.5
 
--- Criar GUI de loading
+-- Criar blur
+local blur = Instance.new("BlurEffect")
+blur.Size = 0
+blur.Parent = game.Lighting
+TweenService:Create(blur, TweenInfo.new(0.5), {Size = 15}):Play()
+
+-- Criar GUI
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "RoyalHubLoader"
 screenGui.Parent = game.CoreGui
@@ -43,7 +47,6 @@ statusText.Font = Enum.Font.Gotham
 statusText.TextSize = 14
 statusText.Parent = loadingFrame
 
--- Barra de progresso
 local progressBarBack = Instance.new("Frame")
 progressBarBack.Size = UDim2.new(0.8, 0, 0, 20)
 progressBarBack.Position = UDim2.new(0.5, 0, 0.6, 0)
@@ -58,75 +61,44 @@ progressBar.BackgroundColor3 = Color3.fromRGB(100, 150, 255)
 progressBar.Parent = progressBarBack
 Instance.new("UICorner", progressBar).CornerRadius = UDim.new(0, 10)
 
--- Função para atualizar status
 local function updateStatus(text, progress)
     statusText.Text = text
     if progress then
-        progressBar.Size = UDim2.new(progress, 0, 1, 0)
+        TweenService:Create(progressBar, TweenInfo.new(0.3), {Size = UDim2.new(progress, 0, 1, 0)}):Play()
     end
 end
 
--- Animação de loading suave
-spawn(function()
+task.spawn(function()
     local startTime = tick()
-    while tick() - startTime < LOADING_MIN_TIME do
-        local progress = (tick() - startTime) / LOADING_MIN_TIME
-        progressBar.Size = UDim2.new(progress * 0.8, 0, 1, 0)
-        wait()
-    end
-end)
-
--- Carregamento principal
-spawn(function()
     updateStatus("Conectando...", 0.2)
-    
-    -- Teste de conexão
-    local testSuccess = pcall(function()
-        game:HttpGet("https://google.com")
-    end)
-    
-    if not testSuccess then
-        updateStatus("Sem conexão", 1)
-        progressBar.BackgroundColor3 = Color3.new(1, 0, 0)
-        return
-    end
+    pcall(function() game:HttpGet("https://google.com") end)
 
-    -- Carregar script
+    updateStatus("Carregando script...", 0.5)
     local success, content = pcall(function()
         return game:HttpGet(REPO_URL)
     end)
-    
-    if not success then
-        updateStatus("URL inválida", 1)
-        progressBar.BackgroundColor3 = Color3.new(1, 0, 0)
-        warn("ERRO: "..content)
+
+    if not success or #content < 50 then
+        updateStatus("Falha ao carregar", 1)
+        progressBar.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
+        task.wait(2)
+        screenGui:Destroy()
         return
     end
-    
-    if #content < 50 then -- Verifica se veio conteúdo mínimo
-        updateStatus("Script vazio", 1)
-        progressBar.BackgroundColor3 = Color3.new(1, 0, 0)
-        return
+
+    local elapsed = tick() - startTime
+    if elapsed < LOADING_MIN_TIME then
+        task.wait(LOADING_MIN_TIME - elapsed)
     end
 
     updateStatus("Executando...", 1)
-    local success, err = pcall(loadstring(content))
-    
-    if success then
-        screenGui:Destroy()
-    else
-        updateStatus("Erro no script", 1)
-        progressBar.BackgroundColor3 = Color3.new(1, 0, 0)
-        warn("ERRO NO SCRIPT: "..err)
-    end
-end)
+    task.wait(0.5)
+    pcall(loadstring(content))
 
--- Fechar se demorar muito
-delay(10, function()
-    if screenGui and screenGui.Parent then
-        updateStatus("Timeout - Verifique sua conexão", 1)
-        progressBar.BackgroundColor3 = Color3.fromRGB(255, 80, 80)
-        wait(2)
-        screenGui:Destroy()
-    end
+    -- Fechar com animação
+    TweenService:Create(blur, TweenInfo.new(0.5), {Size = 0}):Play()
+    TweenService:Create(loadingFrame, TweenInfo.new(0.4), {Position = UDim2.new(0.5, 0, 1.5, 0)}):Play()
+    task.wait(0.5)
+    blur:Destroy()
+    screenGui:Destroy()
 end)
