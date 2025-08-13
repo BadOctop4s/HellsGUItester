@@ -6,7 +6,7 @@ Bem-vindo ao RoyalHub — um script customizado para Roblox desenvolvido para of
 
 Para executar o RoyalHub no seu executor de scripts do Roblox, utilize o seguinte código:
 ---------------------------------------------------------------------------------------
-loadstring(game:HttpGet("https://raw.githubusercontent.com/BadOctop4s/RoyalHub/main/Loader.lua"))()
+loadstring(game:HttpGet(
 ---------------------------------------------------------------------------------------
 Este comando carrega e executa o script diretamente do GitHub, iniciando a interface do RoyalHub no seu jogo.
 
