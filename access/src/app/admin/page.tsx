@@ -1,12 +1,15 @@
 "use client"
+
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Dashboard from './components/Dashboard'
 import UserList from './components/UserList'
 import AdminList from './components/Adminlist'
-import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
 
 export default function AdminPage() {
   const router = useRouter()
+
+  // Verifica se o admin está logado
   useEffect(() => {
     const email = localStorage.getItem('admin_email')
     if (!email) router.push('/login')
@@ -15,10 +18,18 @@ export default function AdminPage() {
   return (
     <div style={{ padding: 50 }}>
       <h1>Painel Admin</h1>
+
+      {/* Dashboard com estatísticas */}
       <Dashboard />
-      <hr />
+
+      <hr style={{ margin: '20px 0' }} />
+
+      {/* Lista de usuários */}
       <UserList />
-      <hr />
+
+      <hr style={{ margin: '20px 0' }} />
+
+      {/* Lista de admins */}
       <AdminList />
     </div>
   )
