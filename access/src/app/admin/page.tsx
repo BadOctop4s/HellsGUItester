@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Dashboard from './components/Dashboard'
 import UserList from './components/UserList'
-import AdminList from './components/ListaAdmin'
+import AdminList from './components/Adminlist'
 
 export default function AdminPage() {
   const router = useRouter()
