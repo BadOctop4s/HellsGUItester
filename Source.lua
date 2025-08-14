@@ -1,546 +1,480 @@
--- Royal Hub GUI
-local Players = game:GetService("Players")
-local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
+local WindUI = loadstring(game:HttpGet("https://raw.githubusercontent.com/Footagesus/WindUI/main/dist/main.lua"))()
 
--- Configurações
-local LocalPlayer = Players.LocalPlayer
-local themeColor = Color3.fromRGB(140, 0, 255) -- Roxo drip
+local Icons = loadstring(game:HttpGetAsync("https://raw.githubusercontent.com/Footagesus/Icons/main/Main-v2.lua"))()
 
--- Remover GUI existente
-if game.CoreGui:FindFirstChild("RoyalHub") then
-    game.CoreGui:FindFirstChild("RoyalHub"):Destroy()
-end
+local PrimaryColor = Color3.fromHex("#ffffff")
+local SecondaryColor = Color3.fromHex("#315dff")
 
--- Criar GUI principal
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "RoyalHub"
-screenGui.Parent = game.CoreGui
-
--- Frame principal
-local isMobile = UserInputService.TouchEnabled
-
-local guiWidth = isMobile and 325 or 500
-local guiHeight = isMobile and 358 or 550
-
-local mainFrame = Instance.new("Frame")
-mainFrame.Size = UDim2.new(0, guiWidth, 0, guiHeight)
-
--- Ajustar posição para mobile (um pouco mais para cima)
-mainFrame.Position = isMobile and UDim2.new(0.5, 0, 0.45, 0) or UDim2.new(0.5, 0, 0.5, 0)
-mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-mainFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
-mainFrame.Parent = screenGui
-
-Instance.new("UICorner", mainFrame).CornerRadius = UDim.new(0, 8)
-local uiStroke = Instance.new("UIStroke", mainFrame)
-uiStroke.Color = themeColor
-uiStroke.Thickness = 2
-
-if not UserInputService.TouchEnabled then -- Verifica se é desktop
-    mainFrame.Position = UDim2.new(0.5, 0, 0.5, 0)
-    local isDesktop = UserInputService.TouchEnabled == false
-    local guiWidth = isDesktop and 500 or 325
-    local guiHeight = isDesktop and 550 or 358
-end
-
--- Barra de título
-local titleBar = Instance.new("Frame")
-titleBar.Size = UDim2.new(1, 0, 0, 40)
-titleBar.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-titleBar.Parent = mainFrame
-Instance.new("UICorner", titleBar).CornerRadius = UDim.new(0, 8)
-
-local titleText = Instance.new("TextLabel")
-titleText.Text = "ROYAL HUB | EXCLUSIVO"
-titleText.Size = UDim2.new(1, 0, 1, 0)
-titleText.Font = Enum.Font.GothamBold
-titleText.TextColor3 = Color3.new(1, 1, 1)
-titleText.TextSize = 18
-titleText.BackgroundTransparency = 1
-titleText.Parent = titleBar
-
--- Botão de fechar
-local closeBtn = Instance.new("TextButton")
-closeBtn.Text = "X"
-closeBtn.Size = UDim2.new(0, 30, 0, 30)
-closeBtn.Position = UDim2.new(1, -35, 0, 5)
-closeBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-closeBtn.TextColor3 = Color3.new(1, 1, 1)
-closeBtn.Font = Enum.Font.GothamBold
-closeBtn.Parent = titleBar
-Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 4)
-
-closeBtn.MouseButton1Click:Connect(function()
-    screenGui:Destroy()
-end)
-
--- Sidebar (Menu lateral)
-local sidebar = Instance.new("Frame")
-sidebar.Size = UDim2.new(0, 150, 1, -40)
-sidebar.Position = UDim2.new(0, 0, 0, 40)
-sidebar.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
-sidebar.Parent = mainFrame
-
--- Categorias do menu
-local categories = {
-    {"Informações", {
-        "Início",
-        "Spam/Client",
-        "Personagem",
-        "Trolar"
-    }},
-    {"Audio/Música", {
-        "Roupas",
-        "Casa",
-        "Carro"
-    }},
-    {"Configurações", {
-        "Tema",
-        "Sobre",
-    }}
+-- Change default icon set
+Icons.SetIconsType("geist")
+-------------------------------------------------------------SERVICES---------------------------------------------------------
+local S = {
+    Players = game:GetService("Players"),
+    Tween = game:GetService("TweenService"),
+    RS = game:GetService("ReplicatedStorage"),
+    WS = game:GetService("Workspace"),
+    Run = game:GetService("RunService"),
+    UI = game:GetService("UserInputService"),
+    Sound = game:GetService("SoundService"),
 }
 
--- Conteúdo principal
-local contentFrame = Instance.new("Frame")
-contentFrame.Size = UDim2.new(1, -160, 1, -50)
-contentFrame.Position = UDim2.new(0, 155, 0, 45)
-contentFrame.BackgroundTransparency = 1
-contentFrame.Parent = mainFrame
-
--- Função para mostrar apenas a página selecionada
-local pages = {}
-
-local function showPage(pageName)
-    for name, frame in pairs(pages) do
-        frame.Visible = (name == pageName)
+--------------------------------------------------- Funções do personagem------------------------------------------------------
+local function setSpeed(value)
+    local player = S.Players.LocalPlayer
+    local humanoid = player.Character and player.Character:FindFirstChild("Humanoid")
+    if humanoid then
+        humanoid.WalkSpeed = value
     end
 end
 
--- Criar página "Início" com seu conteúdo original
-local homeContent = Instance.new("Frame")
-homeContent.Size = UDim2.new(1, 0, 1, 0)
-homeContent.BackgroundTransparency = 1
-homeContent.Visible = true
-homeContent.Parent = contentFrame
-pages["Início"] = homeContent
-
--- Título do mapa
-local mapTitle = Instance.new("TextLabel")
-mapTitle.Text = "Mapa atual:"
-mapTitle.Size = UDim2.new(1, 0, 0, 30)
-mapTitle.Font = Enum.Font.GothamBold
-mapTitle.TextColor3 = themeColor
-mapTitle.TextSize = 16
-mapTitle.BackgroundTransparency = 1
-mapTitle.Parent = homeContent
-
--- Informações do jogo
-local gameInfo = Instance.new("TextLabel")
-gameInfo.Text = "Nome do Jogo: Brookhaven RP\nScript: Royal Hub"
-gameInfo.Size = UDim2.new(1, 0, 0, 50)
-gameInfo.Position = UDim2.new(0, 0, 0, 40)
-gameInfo.Font = Enum.Font.Gotham
-gameInfo.TextColor3 = Color3.new(1, 1, 1)
-gameInfo.TextSize = 14
-gameInfo.TextXAlignment = Enum.TextXAlignment.Left
-gameInfo.BackgroundTransparency = 1
-gameInfo.Parent = homeContent
-
--- Divider
-local divider = Instance.new("Frame")
-divider.Size = UDim2.new(1, 0, 0, 1)
-divider.Position = UDim2.new(0, 0, 0, 100)
-divider.BackgroundColor3 = Color3.fromRGB(60, 60, 70)
-divider.Parent = homeContent
-
--- Discord Widget
-local discordFrame = Instance.new("Frame")
-discordFrame.Size = UDim2.new(1, 0, 0, 120)
-discordFrame.Position = UDim2.new(0, 0, 0, 110)
-discordFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-discordFrame.Parent = homeContent
-Instance.new("UICorner", discordFrame).CornerRadius = UDim.new(0, 6)
-
-local discordTitle = Instance.new("TextLabel")
-discordTitle.Text = "Royal Hub | Community"
-discordTitle.Size = UDim2.new(1, 0, 0, 30)
-discordTitle.Font = Enum.Font.GothamBold
-discordTitle.TextColor3 = themeColor
-discordTitle.TextSize = 16
-discordTitle.BackgroundTransparency = 1
-discordTitle.Parent = discordFrame
-
-local discordText = Instance.new("TextLabel")
-discordText.Text = "Junte-se a nossa comunidade discord para receber informações sobre o menu!"
-discordText.Size = UDim2.new(1, -20, 0, 50)
-discordText.Position = UDim2.new(0, 10, 0, 35)
-discordText.Font = Enum.Font.Gotham
-discordText.TextColor3 = Color3.new(1, 1, 1)
-discordText.TextSize = 13
-discordText.TextWrapped = true
-discordText.BackgroundTransparency = 1
-discordText.Parent = discordFrame
-
-local discordLink = Instance.new("TextButton")
-discordLink.Text = "https://discord.gg/royalhub"
-discordLink.Size = UDim2.new(1, -20, 0, 30)
-discordLink.Position = UDim2.new(0, 10, 0, 85)
-discordLink.Font = Enum.Font.Gotham
-discordLink.TextColor3 = Color3.fromRGB(100, 150, 255)
-discordLink.TextSize = 13
-discordLink.BackgroundTransparency = 1
-discordLink.Parent = discordFrame
-
--- Webhook Section
-local webhookFrame = Instance.new("Frame")
-webhookFrame.Size = UDim2.new(1, 0, 0, 150)
-webhookFrame.Position = UDim2.new(0, 0, 0, 240)
-webhookFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-webhookFrame.Parent = homeContent
-Instance.new("UICorner", webhookFrame).CornerRadius = UDim.new(0, 6)
-
-local webhookTitle = Instance.new("TextLabel")
-webhookTitle.Text = "feedback"
-webhookTitle.Size = UDim2.new(1, 0, 0, 30)
-webhookTitle.Font = Enum.Font.GothamBold
-webhookTitle.TextColor3 = themeColor
-webhookTitle.TextSize = 16
-webhookTitle.BackgroundTransparency = 1
-webhookTitle.Parent = webhookFrame
-
-local webhookText = Instance.new("TextLabel")
-webhookText.Text = "Ajude-nos a melhorar o Royal Hub enviando suas ideias ou sugestões!"
-webhookText.Size = UDim2.new(1, -20, 0, 40)
-webhookText.Position = UDim2.new(0, 10, 0, 35)
-webhookText.Font = Enum.Font.Gotham
-webhookText.TextColor3 = Color3.new(1, 1, 1)
-webhookText.TextSize = 13
-webhookText.TextWrapped = true
-webhookText.BackgroundTransparency = 1
-webhookText.Parent = webhookFrame
-
-local messageBox = Instance.new("TextBox")
-messageBox.PlaceholderText = "Digite sua ideia aqui..."
-messageBox.Size = UDim2.new(1, -20, 0, 40)
-messageBox.Position = UDim2.new(0, 10, 0, 80)
-messageBox.Font = Enum.Font.Gotham
-messageBox.TextColor3 = Color3.new(1, 1, 1)
-messageBox.TextSize = 13
-messageBox.BackgroundColor3 = Color3.fromRGB(40, 40, 45)
-messageBox.Parent = webhookFrame
-Instance.new("UICorner", messageBox).CornerRadius = UDim.new(0, 4)
-
-local sendButton = Instance.new("TextButton")
-sendButton.Text = "Enviar Mensagem"
-sendButton.Size = UDim2.new(1, -20, 0, 30)
-sendButton.Position = UDim2.new(0, 10, 0, 130)
-sendButton.Font = Enum.Font.GothamBold
-sendButton.TextColor3 = Color3.new(1, 1, 1)
-sendButton.TextSize = 14
-sendButton.BackgroundColor3 = themeColor
-sendButton.Parent = webhookFrame
-Instance.new("UICorner", sendButton).CornerRadius = UDim.new(0, 4)
-
--- Anúncios
-local announcementFrame = Instance.new("Frame")
-announcementFrame.Size = UDim2.new(1, 0, 0, 80)
-announcementFrame.Position = UDim2.new(0, 0, 0, 400)
-announcementFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 35)
-announcementFrame.Parent = homeContent
-Instance.new("UICorner", announcementFrame).CornerRadius = UDim.new(0, 6)
-
-local announcementTitle = Instance.new("TextLabel")
-announcementTitle.Text = "Anúncios"
-announcementTitle.Size = UDim2.new(1, 0, 0, 30)
-announcementTitle.Font = Enum.Font.GothamBold
-announcementTitle.TextColor3 = themeColor
-announcementTitle.TextSize = 16
-announcementTitle.BackgroundTransparency = 1
-announcementTitle.Parent = announcementFrame
-
-local announcementText = Instance.new("TextLabel")
-announcementText.Text = "Menu Criado!"
-announcementText.Size = UDim2.new(1, -20, 1, -35)
-announcementText.Position = UDim2.new(0, 10, 0, 35)
-announcementText.Font = Enum.Font.Gotham
-announcementText.TextColor3 = Color3.new(1, 1, 1)
-announcementText.TextSize = 15
-announcementText.TextXAlignment = Enum.TextXAlignment.Left
-announcementText.TextYAlignment = Enum.TextYAlignment.Top
-announcementText.BackgroundTransparency = 1
-announcementText.Parent = announcementFrame
-
--- Função para arrastar a GUI
-local dragging, dragInput, dragStart, startPos
-titleBar.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        dragStart = input.Position
-        startPos = mainFrame.Position
-        
-        input.Changed:Connect(function()
-            if input.UserInputState == Enum.UserInputState.End then
-                dragging = false
-            end
-        end)
+local function setJumpPower(value)
+    local player = S.Players.LocalPlayer
+    local humanoid = player.Character and player.Character:FindFirstChild("Humanoid")
+    if humanoid then
+        humanoid.JumpPower = value
     end
-end)
-
-titleBar.InputChanged:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.MouseMovement then
-        dragInput = input
-    end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-    if input == dragInput and dragging then
-        local delta = input.Position - dragStart
-        mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
-end)
-
--- Função para criar páginas vazias (com label simples)
-local function createPage(name)
-    local page = Instance.new("Frame")
-    page.Size = UDim2.new(1, 0, 1, 0)
-    page.BackgroundTransparency = 1
-    page.Visible = false
-    page.Parent = contentFrame
-    
-    local label = Instance.new("TextLabel")
-    label.Text = "Página "..name
-    label.Size = UDim2.new(1, 0, 0, 30)
-    label.Font = Enum.Font.GothamBold
-    label.TextColor3 = themeColor
-    label.TextSize = 18
-    label.BackgroundTransparency = 1
-    label.Parent = page
-    
-    pages[name] = page
 end
 
--- Criar páginas para todas as outras opções (exceto "Início" que já existe)
-for _, category in ipairs(categories) do
-    for _, item in ipairs(category[2]) do
-        if item ~= "Início" and not pages[item] then
-            createPage(item)
+-- Função de Teleporte
+local function teleportToPlayer(targetPlayer)
+    local player = S.Players.LocalPlayer
+    if targetPlayer and targetPlayer.Character and targetPlayer.Character:FindFirstChild("HumanoidRootPart") then
+        player.Character.HumanoidRootPart.CFrame = targetPlayer.Character.HumanoidRootPart.CFrame
+    end
+end
+
+local function copySkin(targetPlayer)
+    local localPlayer = S.Players.LocalPlayer
+    local targetChar = targetPlayer.Character
+    local localChar = localPlayer.Character
+
+    if not targetChar or not localChar then return end
+
+    -- Limpa roupas e acessórios atuais (opcional)
+    for _, item in pairs(localChar:GetChildren()) do
+        if item:IsA("Shirt") or item:IsA("Pants") or item:IsA("Accessory") then
+            item:Destroy()
+        end
+    end
+
+    -- Copia roupas e acessórios do jogador alvo
+    for _, item in pairs(targetChar:GetChildren()) do
+        if item:IsA("Shirt") or item:IsA("Pants") or item:IsA("Accessory") then
+            local clone = item:Clone()
+            clone.Parent = localChar
         end
     end
 end
--- pagina Trolar com botoes
-    local UserInputService = game:GetService("UserInputService")
+--------------------------------------------------------------INFORMAÇÕES---------------------------------------------------------
 local Players = game:GetService("Players")
+local MarketplaceService = game:GetService("MarketplaceService")
+local RunService = game:GetService("RunService")
 
-local camera = workspace.CurrentCamera
-local localPlayer = Players.LocalPlayer
+local player = Players.LocalPlayer
+local placeId = game.PlaceId
 
-local viewPage = pages["Trolar"] -- substitua pelo nome da sua página
-
--- Função pra criar UICorner rapidinho
-local function createUICorner(parent, radius)
-    local uc = Instance.new("UICorner")
-    uc.CornerRadius = UDim.new(0, radius or 6)
-    uc.Parent = parent
-    return uc
+-- Obter nome do lugar (mapa) via MarketplaceService (pode falhar em alguns jogos)
+local placeName = "Carregando..."
+local success, err = pcall(function()
+    placeName = MarketplaceService:GetProductInfo(placeId).Name
+end)
+if not success then
+    placeName = "Mapa Desconhecido"
 end
 
--- Container dropdown
-local dropdownFrame = Instance.new("Frame")
-dropdownFrame.Size = UDim2.new(0, 220, 0, 36)
-dropdownFrame.Position = UDim2.new(0, 10, 0, 50)
-dropdownFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
-dropdownFrame.Parent = viewPage
-createUICorner(dropdownFrame, 8)
+-- Tempo no servidor (atualizado a cada segundo)
+local startTime = os.time()
+local timeInServer = 0
 
--- Label com jogador selecionado
-local selectedLabel = Instance.new("TextLabel")
-selectedLabel.Text = "Selecione um jogador"
-selectedLabel.Size = UDim2.new(1, -40, 1, 0)
-selectedLabel.Position = UDim2.new(0, 10, 0, 0)
-selectedLabel.BackgroundTransparency = 1
-selectedLabel.TextColor3 = Color3.new(1,1,1)
-selectedLabel.Font = Enum.Font.Gotham
-selectedLabel.TextSize = 14
-selectedLabel.TextXAlignment = Enum.TextXAlignment.Left
-selectedLabel.Parent = dropdownFrame
+-- Atualiza o tempo no servidor
+RunService.Heartbeat:Connect(function()
+    timeInServer = os.time() - startTime
+end)
 
--- Botão abrir/fechar dropdown
-local toggleButton = Instance.new("TextButton")
-toggleButton.Text = "▼"
-toggleButton.Size = UDim2.new(0, 30, 1, 0)
-toggleButton.Position = UDim2.new(1, -30, 0, 0)
-toggleButton.BackgroundColor3 = Color3.fromRGB(60, 60, 65)
-toggleButton.TextColor3 = Color3.new(1,1,1)
-toggleButton.Font = Enum.Font.GothamBold
-toggleButton.TextSize = 16
-toggleButton.Parent = dropdownFrame
-createUICorner(toggleButton, 8)
+------------------------------------------------------- Icons --------------------------------------------------------------
+local InicioIcon = Icons.Icon("user")
+local trolIcon = Icons.Icon("crosshair")
+local utilIcon = Icons.Icon("acessibility")
+local settingIcon = Icons.Icon("settings-gear")
+local UIcon = Icons.Icon("star")
+local eye_dashed = Icons.Icon("eye-dashed")
+--------------------------------------------------- Translations -----------------------------------------------------------
+WindUI:Localization({
+    Enabled = true,
+    Prefix = "loc:",
+    DefaultLanguage = "pt",
+    Translations = {
+        ["ru"] = {
+            ["TittleHub"] = "RoyalHub",
+             ["Inicio"] = "You",
+            ["WELCOME"] = "Добро пожаловать в RoyalHub!",
+            ["LIB_DESC"] = "Библиотека для создания красивых интерфейсов",
+            ["SETTINGS"] = "Настройки",
+            ["APPEARANCE"] = "Внешний вид",
+            ["FEATURES"] = "Функционал",
+            ["UTILITIES"] = "Инструменты",
+            ["UI_ELEMENTS"] = "UI Элементы",
+            ["CONFIGURATION"] = "Конфигурация",
+            ["SAVE_CONFIG"] = "Сохранить конфигурацию",
+            ["LOAD_CONFIG"] = "Загрузить конфигурацию",
+            ["THEME_SELECT"] = "Выберите тему",
+        },
+        ["en"] = {
+            ["TittleHub"] = "RoyalHub demo",
+             ["Inicio"] = "You",
+            ["WELCOME"] = "Welcome to RoyalHub!",
+            ["LIB_DESC"] = "Best universal script for Roblox!",
+            ["SETTINGS"] = "Settings",
+            ["APPEARANCE"] = "Appearance",
+             ["ini_desc"] = "your profile description and etc",
+            ["FEATURES"] = "Features",
+            ["UTILITIES"] = "Utilities",
+            ["UI_ELEMENTS"] = "UI Elements",
+            ["CONFIGURATION"] = "Configuration",
+            ["SAVE_CONFIG"] = "Save Configuration",
+            ["LOAD_CONFIG"] = "Load Configuration",
+            ["THEME_SELECT"] = "Select Theme",
+        },
+        ["es"] = {
+            ["TittleHub"] = "RoyalHub demo",
+             ["Inicio"] = "Tu perfil",
+            ["WELCOME"] = "¡Bienvenido a RoyalHub!",
+            ["LIB_DESC"] = "¡Mejor script universal para Roblox!",
+            ["SETTINGS"] = "Configuraciones",
+            ["APPEARANCE"] = "Apariencia",
+            ["FEATURES"] = "Características",
+            ["UTILITIES"] = "Utilidades",
+            ["UI_ELEMENTS"] = "Elementos de UI",
+            ["CONFIGURATION"] = "Configuración",
+            ["SAVE_CONFIG"] = "Guardar Configuración",
+            ["LOAD_CONFIG"] = "Cargar Configuración",
+            ["THEME_SELECT"] = "Seleccionar Tema",
+    },
+    ["pt"] = {
+            ["TittleHub"] = "RoyalHub demo",
+             ["Inicio"] = "Seu perfil",
+            ["WELCOME"] = "Bem-vindo ao RoyalHub!",
+            ["LIB_DESC"] = "Melhor script universal para Roblox!",
+            ["SETTINGS"] = "Configuracões",
+            ["APPEARANCE"] = "Aparencia",
+            ["FEATURES"] = "Novidades",
+            ["UTILITIES"] = "Utilidades",
+            ["UI_ELEMENTS"] = "UI Elements",
+            ["CONFIGURATION"] = "Configurar",
+            ["SAVE_CONFIG"] = "Salvar Configuração",
+            ["LOAD_CONFIG"] = "Carregar Configuração",
+            ["THEME_SELECT"] = "Selecionar Tema",
+        }
+}})
 
--- Lista scrollável (inicialmente oculta)
-local listFrame = Instance.new("Frame")
-listFrame.Size = UDim2.new(0, 220, 0, 160)
-listFrame.Position = UDim2.new(0, 10, 0, 90)
-listFrame.BackgroundColor3 = Color3.fromRGB(45, 45, 50)
-listFrame.Visible = false
-listFrame.Parent = viewPage
-createUICorner(listFrame, 8)
+WindUI.TransparencyValue = 0.2
+WindUI:SetTheme("Dark")
 
-local scroll = Instance.new("ScrollingFrame")
-scroll.Size = UDim2.new(1, 0, 1, 0)
-scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-scroll.ScrollBarThickness = 6
-scroll.BackgroundTransparency = 1
-scroll.Parent = listFrame
-
-local layout = Instance.new("UIListLayout")
-layout.Padding = UDim.new(0, 4)
-layout.Parent = scroll
-
--- Variável pra player selecionado
-local selectedPlayer = nil
-
--- Atualiza lista de jogadores na dropdown
-local function updatePlayerList()
-    -- Limpa itens antigos
-    for _, child in pairs(scroll:GetChildren()) do
-        if child:IsA("TextButton") then
-            child:Destroy()
-        end
+local function gradient(text, startColor, endColor)
+    local result = ""
+    for i = 1, #text do
+        local t = (i - 1) / (#text - 1)
+        local r = math.floor((startColor.R + (endColor.R - startColor.R) * t) * 255)
+        local g = math.floor((startColor.G + (endColor.G - startColor.G) * t) * 255)
+        local b = math.floor((startColor.B + (endColor.B - startColor.B) * t) * 255)
+        result = result .. string.format('<font color="rgb(%d,%d,%d)">%s</font>', r, g, b, text:sub(i, i))
     end
-
-    local players = Players:GetPlayers()
-    for i, player in ipairs(players) do
-        local playerButton = Instance.new("TextButton")
-        playerButton.Text = player.Name
-        playerButton.Size = UDim2.new(1, -10, 0, 32)
-        playerButton.BackgroundColor3 = Color3.fromRGB(70, 70, 80)
-        playerButton.TextColor3 = Color3.new(1, 1, 1)
-        playerButton.Font = Enum.Font.Gotham
-        playerButton.TextSize = 14
-        playerButton.Parent = scroll
-        createUICorner(playerButton, 6)
-
-        playerButton.MouseButton1Click:Connect(function()
-            selectedPlayer = player
-            selectedLabel.Text = player.Name
-            listFrame.Visible = false
-            toggleButton.Text = "▼"
-        end)
-    end
-
-    scroll.CanvasSize = UDim2.new(0, 0, 0, #players * 36)
+    return result
 end
+---------------------------------------------- POPUP ------------------------------------------------------------------------
+WindUI:Popup({
+    Title = gradient("RoyalHub Demo", Color3.fromHex("#6A11CB"), Color3.fromHex("#2575FC")),
+    Icon = "sparkles",
+    Content = "loc:LIB_DESC",
+    Buttons = {
+        {
+            Title = "Aviso",
+            Icon = "arrow-right",
+            Variant = "Primary",
+            Callback = function() end
+        }
+    }
+})
+--------------------------------------------- WINDOW ------------------------------------------------------------------------
+local Window = WindUI:CreateWindow({
+    Title = "loc:TittleHub",
+    Icon = "star",
+    Author = "loc:WELCOME",
+    Folder = "RoyalHub Demo",
+    Size = UDim2.fromOffset(350, 320),
+    Theme = "Dark",
+     User = {
+        Enabled = true,
+        Anonymous = false
+    }
+})
 
-toggleButton.MouseButton1Click:Connect(function()
-    listFrame.Visible = not listFrame.Visible
-    toggleButton.Text = listFrame.Visible and "▲" or "▼"
-end)
+-- TAGS--
+Window:Tag({
+    Title = "Demo",
+    Color = Color3.fromHex("#FFA500")
+})
+Window:Tag({
+    Title = "1.0.9",
+    Color = Color3.fromHex("#FFFF00")
+})
 
-Players.PlayerAdded:Connect(updatePlayerList)
-Players.PlayerRemoving:Connect(function()
-    if selectedPlayer and not table.find(Players:GetPlayers(), selectedPlayer) then
-        selectedPlayer = nil
-        selectedLabel.Text = "Selecione um jogador"
-    end
-    updatePlayerList()
-end)
+--------------------------------------------- TOPBAR BUTTONS -------------------------------------------------------------
 
-updatePlayerList()
+Window:CreateTopbarButton("theme-switcher", "moon", function()
+    WindUI:SetTheme(WindUI:GetCurrentTheme() == "Dark" and "Light" or "Dark")
+    WindUI:Notify({
+        Title = "Tema alterado",
+        Content = "Tema atual:"..WindUI:GetCurrentTheme(),
+        Duration = 2
+    })
+end, 990)
 
--- Botões para View e Destravar câmera
-local buttonsFrame = Instance.new("Frame")
-buttonsFrame.Size = UDim2.new(0, 150, 0, 36)
-buttonsFrame.Position = UDim2.new(0, 240, 0, 50)
-buttonsFrame.BackgroundTransparency = 1
-buttonsFrame.Parent = viewPage
+------------------------------------------------------------- Tabs -----------------------------------------------------------
+local home = Window:Tab({
+    Title = "loc:Inicio",
+    Icon = "user",
+    Description = "loc:ini_desc",
+})
 
-local viewBtn = Instance.new("TextButton")
-viewBtn.Text = "View"
-viewBtn.Size = UDim2.new(0, 70, 1, 0)
-viewBtn.BackgroundColor3 = Color3.fromRGB(130, 60, 255)
-viewBtn.TextColor3 = Color3.new(1, 1, 1)
-viewBtn.Font = Enum.Font.GothamBold
-viewBtn.TextSize = 14
-viewBtn.Parent = buttonsFrame
-createUICorner(viewBtn, 6)
+local Trol = Window:Tab({
+    Title = "Trolls",
+    Icon = "crosshair",
+    Description = "Trolls do RoyalHub",
+})
+local Roupas = Window:Tab({
+    Title = "Roupas",
+    Icon = "shirt",
+    Description = "Copie roupas e use estilos personalizados!",
+})
 
-local stopViewBtn = Instance.new("TextButton")
-stopViewBtn.Text = "Destravar"
-stopViewBtn.Size = UDim2.new(0, 70, 1, 0)
-stopViewBtn.Position = UDim2.new(0, 80, 0, 0)
-stopViewBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-stopViewBtn.TextColor3 = Color3.new(1, 1, 1)
-stopViewBtn.Font = Enum.Font.GothamBold
-stopViewBtn.TextSize = 14
-stopViewBtn.Parent = buttonsFrame
-createUICorner(stopViewBtn, 6)
+local Utilities = Window:Tab({
+    Title = "loc:UTILITIES",
+    Icon = "accessibility",
+    Description = "Utilidades do RoyalHub",
+})
 
-local viewing = false
-local originalCameraSubject = camera.CameraSubject
+local setting = Window:Tab({
+    Title = "loc:SETTINGS",
+    Icon = "settings",
+    Description = "Configurações do RoyalHub",
+})
 
-viewBtn.MouseButton1Click:Connect(function()
-    if not selectedPlayer then return end
-
-    if not viewing then
-        if selectedPlayer.Character and selectedPlayer.Character:FindFirstChild("Humanoid") then
-            camera.CameraSubject = selectedPlayer.Character.Humanoid
-            viewing = true
-            viewBtn.Text = "Visualizando"
+------------------------------------------------------ Buttoons -------------------------------------------------------------
+ local SpeedSlider = Trol:Slider({
+    Title = "Velocidade",
+    Step = 1, -- incrementos de 1
+    Value = {
+        Min = 16,
+        Max = 900,
+        Default = 16,
+    },
+    Callback = function(value)
+        local player = S.Players.LocalPlayer
+        local humanoid = player.Character and player.Character:FindFirstChild("Humanoid")
+        if humanoid then
+            humanoid.WalkSpeed = value
         end
     end
-end)
-
-stopViewBtn.MouseButton1Click:Connect(function()
-    if viewing then
-        camera.CameraSubject = originalCameraSubject
-        viewing = false
-        viewBtn.Text = "View"
+})
+--------------------------------------------- Pulo ------------------------------------------------------------
+local JumpSlider = Trol:Slider({
+    Title = "Altura do Pulo",
+    Step = 1,
+    Value = {
+        Min = 10,
+        Max = 500,
+        Default = 50,
+    },
+    Callback = function(value)
+        local player = S.Players.LocalPlayer
+        local humanoid = player.Character and player.Character:FindFirstChild("Humanoid")
+        if humanoid then
+            humanoid.JumpPower = value
+        end
     end
-end)
--- Criar botões do sidebar com evento para troca de página
-local buttonY = 10
-for _, category in ipairs(categories) do
-    local categoryLabel = Instance.new("TextLabel")
-    categoryLabel.Text = " "..category[1]
-    categoryLabel.Size = UDim2.new(1, -10, 0, 25)
-    categoryLabel.Position = UDim2.new(0, 5, 0, buttonY)
-    categoryLabel.Font = Enum.Font.GothamBold
-    categoryLabel.TextColor3 = themeColor
-    categoryLabel.TextSize = 14
-    categoryLabel.TextXAlignment = Enum.TextXAlignment.Left
-    categoryLabel.BackgroundTransparency = 1
-    categoryLabel.Parent = sidebar
-    buttonY = buttonY + 30
+})
+---------------------------------------------- Noclip ------------------------------------------------------------
+local noclipEnabled = false
+local lastCollisionState = {} -- Armazena o estado original das partes
 
-    for _, item in ipairs(category[2]) do
-        local itemButton = Instance.new("TextButton")
-        itemButton.Text = "   "..item
-        itemButton.Size = UDim2.new(1, -10, 0, 30)
-        itemButton.Position = UDim2.new(0, 5, 0, buttonY)
-        itemButton.Font = Enum.Font.Gotham
-        itemButton.TextColor3 = Color3.new(1, 1, 1)
-        itemButton.TextSize = 13
-        itemButton.TextXAlignment = Enum.TextXAlignment.Left
-        itemButton.BackgroundColor3 = Color3.fromRGB(35, 35, 40)
-        itemButton.Parent = sidebar
-        itemButton.TextWrapped = true
-        itemButton.ClipsDescendants = true
-
-        Instance.new("UICorner", itemButton).CornerRadius = UDim.new(0, 4)
-
-        itemButton.MouseButton1Click:Connect(function()
-            if pages[item] then
-                showPage(item)
+Trol:Toggle({
+    Title = "Noclip",
+    Description = "Passar por paredes",
+    Icon = "eye", -- Ícone corrigido
+    DefaultValue = false,
+    Callback = function(state)
+        noclipEnabled = state
+        
+        -- Se desativado, restaura a colisão das partes
+        if not state then
+            local char = S.Players.LocalPlayer.Character
+            if char then
+                for _, part in pairs(char:GetChildren()) do
+                    if part:IsA("BasePart") and lastCollisionState[part] ~= nil then
+                        part.CanCollide = lastCollisionState[part]
+                    end
+                end
+                lastCollisionState = {} -- Limpa o cache
             end
-        end)
-
-        buttonY = buttonY + 35
+        end
     end
-    buttonY = buttonY + 15
+})
+
+S.Run.Stepped:Connect(function()
+    local char = S.Players.LocalPlayer.Character
+    if noclipEnabled and char then
+        for _, part in pairs(char:GetChildren()) do
+            if part:IsA("BasePart") then
+                -- Salva o estado original da colisão (se não foi salvo antes)
+                if lastCollisionState[part] == nil then
+                    lastCollisionState[part] = part.CanCollide
+                end
+                part.CanCollide = false
+            end
+        end
+    end
+end)
+-------------------------------------------------- Teleport -------------------------------------------------------------
+local function GetSafePlayerList()
+    local players = {}
+    local success, err = pcall(function()
+        for _, player in ipairs(S.Players:GetPlayers()) do
+            if player ~= S.Players.LocalPlayer and player.Name then
+                table.insert(players, player.Name)
+            end
+        end
+    end)
+    return players
 end
 
--- Mostrar a página inicial ao abrir
-showPage("Início")
+local function CreateTeleportDropdown()
+    local playerList = GetSafePlayerList()
+    
+    return Trol:Dropdown({
+        Title = "👥 Teleportar",
+        Description = #playerList > 0 and (#playerList.." jogadores") or "Nenhum jogador",
+        Options = #playerList > 0 and playerList or {"Nenhum jogador online"},
+        Callback = function(selected)
+            if selected == "Nenhum jogador online" then return end
+            
+            local target = S.Players:FindFirstChild(selected)
+            if target and target.Character then
+                local hrp = target.Character:FindFirstChild("HumanoidRootPart")
+                local localChar = S.Players.LocalPlayer.Character
+                
+                if hrp and localChar and localChar:FindFirstChild("HumanoidRootPart") then
+                    localChar.HumanoidRootPart.CFrame = hrp.CFrame
+                    WindUI:Notify({
+                        Title = "✅ Teleportado!",
+                        Content = "Você foi até "..target.Name,
+                        Duration = 3
+                    })
+                end
+            end
+        end
+    })
+end
 
-print("Royal Hub GUI carregada com sucesso!")
+-- Variável global para controle
+local CurrentTeleportDropdown = CreateTeleportDropdown()
+
+-- Sistema de atualização robusto
+local function UpdateTeleportDropdown()
+    local newPlayerList = GetSafePlayerList()
+    
+    -- Destrói e recria o dropdown (garante compatibilidade)
+    CurrentTeleportDropdown:Destroy()
+    CurrentTeleportDropdown = CreateTeleportDropdown()
+    
+    -- Debug opcional
+    print("Lista atualizada:", table.concat(newPlayerList, ", "))
+end
+
+-- Conexão segura dos eventos
+local updateDebounce = false
+local function SafeUpdate()
+    if updateDebounce then return end
+    updateDebounce = true
+    
+    task.spawn(function()
+        pcall(UpdateTeleportDropdown)
+        task.wait(1) -- Debounce de 1 segundo
+        updateDebounce = false
+    end)
+end
+
+-- Inicialização segura
+task.delay(3, function() -- Espera 3 segundos para o primeiro carregamento
+    pcall(SafeUpdate)
+end)
+
+-- Conexão dos eventos
+S.Players.PlayerAdded:Connect(SafeUpdate)
+S.Players.PlayerRemoving:Connect(SafeUpdate)
+--------------------------------------------------------Fly-------------------------------------------------------------
+local flying = false
+local flySpeed = 50
+local flyBV
+
+Trol:Toggle({
+    Title = "Fly",
+    Description = "Ativa ou desativa o voo",
+    Default = false,
+    Callback = function(state)
+        flying = state
+        local player = S.Players.LocalPlayer
+        local char = player.Character
+        if flying and char and char:FindFirstChild("HumanoidRootPart") then
+            flyBV = Instance.new("BodyVelocity")
+            flyBV.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+            flyBV.Velocity = Vector3.new(0, 0, 0)
+            flyBV.Parent = char.HumanoidRootPart
+        elseif char and char:FindFirstChild("HumanoidRootPart") and flyBV then
+            flyBV:Destroy()
+        end
+    end})
+
+-- Controle do movimento do voo
+S.Run.RenderStepped:Connect(function()
+    if flying then
+        local player = S.Players.LocalPlayer
+        local char = player.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            local direction = Vector3.new(0,0,0)
+            if S.UI:IsKeyDown(Enum.KeyCode.W) then direction = direction + char.HumanoidRootPart.CFrame.LookVector end
+            if S.UI:IsKeyDown(Enum.KeyCode.S) then direction = direction - char.HumanoidRootPart.CFrame.LookVector end
+            if S.UI:IsKeyDown(Enum.KeyCode.A) then direction = direction - char.HumanoidRootPart.CFrame.RightVector end
+            if S.UI:IsKeyDown(Enum.KeyCode.D) then direction = direction + char.HumanoidRootPart.CFrame.RightVector end
+            flyBV.Velocity = direction.Unit * flySpeed
+        end
+    end
+end)
+
+-------------------------------------------------- Copiar Skin -------------------------------------------------------------
+local clothesDropDown = Roupas:Dropdown({
+    Title = "Copiar roupa",
+    Description = "Escolha um jogador para copiar a roupa",
+    Options = {S.Players.GetPlayers}, -- será preenchido dinamicamente
+    Callback = function(selected)
+        local target = S.Players:FindFirstChild(selected)
+        if target then
+            copySkin(target)
+        end
+    end
+})
+
+-- Atualiza lista de jogadores
+local function ClothesPlayerList()
+    local options = {}
+    for _, plr in pairs(S.Players:GetPlayers()) do
+        if plr ~= S.Players.LocalPlayer then
+            table.insert(options, plr.Name)
+        end
+    end
+    clothesDropDown:UpdateOptions(options)
+end
+
+S.Players.PlayerAdded:Connect(ClothesPlayerList)
+S.Players.PlayerRemoving:Connect(ClothesPlayerList)
+ClothesPlayerList()
